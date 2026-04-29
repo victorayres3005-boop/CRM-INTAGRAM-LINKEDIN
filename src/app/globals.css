@@ -1,0 +1,74 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --cf-navy:        #203b88;
+  --cf-navy-dark:   #162d6e;
+  --cf-navy-deep:   #0f1f5c;
+  --cf-green:       #73b815;
+  --cf-green-dark:  #5a9010;
+  --cf-green-light: #a8d96b;
+  --cf-green-pale:  #f3fae6;
+  --cf-bg:          #f7f8fc;
+  --cf-surface:     #edf0f7;
+  --cf-border:      #e4e8f0;
+  --cf-text1:       #0f172a;
+  --cf-text2:       #334155;
+  --cf-text3:       #64748b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background-color: var(--cf-bg);
+  color: var(--cf-text1);
+  font-family: "DM Sans", sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Cards ─────────────────────────────────────── */
+.cf-card {
+  @apply bg-white rounded-lg border border-[#e4e8f0];
+}
+
+/* ── Metric numbers ─────────────────────────────── */
+.cf-metric {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* ── Buttons ────────────────────────────────────── */
+.btn-primary {
+  @apply bg-cf-navy text-white text-sm font-medium px-3.5 py-2 rounded-md
+         hover:bg-cf-navy-dark transition-colors;
+}
+
+.btn-ghost {
+  @apply text-cf-text3 text-sm font-medium px-3.5 py-2 rounded-md border border-[#e4e8f0]
+         hover:bg-[#f7f8fc] hover:text-cf-text2 transition-colors;
+}
+
+/* ── Section headers ─────────────────────────────── */
+.cf-section-title {
+  @apply text-[11px] font-semibold text-cf-text3 uppercase tracking-widest;
+}
+
+/* ── Animations ─────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in { animation: fadeUp 0.25s ease-out both; }
+
+/* ── Input fields ───────────────────────────────── */
+.input-field {
+  @apply w-full rounded-md border border-[#e4e8f0] bg-white pl-9 pr-3 py-2 text-[13px]
+         text-cf-text1 placeholder:text-cf-text3/60 outline-none
+         focus:border-cf-navy focus:ring-2 focus:ring-cf-navy/10 transition-all;
+}
