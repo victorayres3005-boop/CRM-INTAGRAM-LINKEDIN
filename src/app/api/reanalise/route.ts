@@ -28,7 +28,7 @@ function getGerente(card: any): string {
 function getRazaoSocial(card: any): string {
   const sf = card.subtitleFields;
   if (!Array.isArray(sf)) return card.title ?? "";
-  return extractField(sf, "Razão Social") || card.title ?? "";
+  return extractField(sf, "Razão Social") || (card.title ?? "");
 }
 
 function diasDesde(dateStr: string | null | undefined): number {
