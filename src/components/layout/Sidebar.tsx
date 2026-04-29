@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, BarChart2, Users, TrendingUp,
-  Megaphone, Briefcase, Settings, CreditCard, ClipboardList, GitMerge,
+  Megaphone, Briefcase, Settings, CreditCard, ClipboardList, GitMerge, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoFull } from "./LogoFull";
@@ -13,6 +13,7 @@ const navItems = [
   { href: "/dashboard/gerentes",        label: "Gerentes",           icon: Briefcase },
   { href: "/dashboard/analise-credito", label: "Análise de Crédito", icon: CreditCard },
   { href: "/dashboard/esteira-credito", label: "Esteira de Crédito", icon: GitMerge },
+  { href: "/dashboard/reanalise",       label: "Reanálise",          icon: RotateCcw },
   { href: "/dashboard/ficha-pj",        label: "Ficha PF/PJ",        icon: ClipboardList },
   { href: "/dashboard",                 label: "Visão Geral",        icon: LayoutDashboard },
   { href: "/dashboard/posts",           label: "Posts",              icon: FileText },
