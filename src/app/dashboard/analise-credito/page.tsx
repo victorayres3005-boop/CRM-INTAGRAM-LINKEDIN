@@ -8,7 +8,7 @@ import {
 import {
   CheckCircle2, XCircle, Clock, AlertCircle,
   RefreshCw, FileSearch, HelpCircle, Search, X,
-  Hash, User, Calendar, Timer, AlignLeft,
+  Hash, User, Calendar, Timer, AlignLeft, Briefcase,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CardCredito } from "@/app/api/analise-credito/route";
@@ -168,8 +168,8 @@ function CardModal({ card, onClose }: { card: CardCredito; onClose: () => void }
           {/* Detalhes */}
           <div className="space-y-3">
             {[
-              { icon: Hash,      label: "CNPJ",         value: card.cnpj || "Não informado" },
-              { icon: User,      label: "Responsável",   value: card.responsavel },
+              { icon: Hash,      label: "CNPJ",           value: card.cnpj || "Não informado" },
+              { icon: Briefcase, label: "Gerente",         value: card.gerente },
               { icon: Calendar,  label: "Data de entrada", value: card.dataEntrada
                   ? new Date(card.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
                   : "—" },
@@ -218,7 +218,7 @@ export default function AnaliseCreditoPage() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [filtroFase, setFiltroFase] = useState("Todos");
-  const [filtroResp, setFiltroResp] = useState("Todos");
+  const [filtroGerente, setFiltroGerente] = useState("Todos");
   const [filtroMes, setFiltroMes] = useState("Todos");
   const [busca, setBusca] = useState("");
   const [cardSelecionado, setCardSelecionado] = useState<CardCredito | null>(null);
@@ -260,16 +260,16 @@ export default function AnaliseCreditoPage() {
 
   // ── Dados derivados ────────────────────────────────────────────────────────
 
-  const fasesUnicas = ["Todos", ...Array.from(new Set(pleitos.map((p) => p.fase).filter(Boolean))).sort(
+  const fasesUnicas    = ["Todos", ...Array.from(new Set(pleitos.map((p) => p.fase).filter(Boolean))).sort(
     (a, b) => (ORDEM_FASE[a] ?? 99) - (ORDEM_FASE[b] ?? 99)
   )];
-  const respsUnicos = ["Todos", ...Array.from(new Set(pleitos.map((p) => p.responsavel).filter((r) => r !== "—"))).sort()];
-  const mesesUnicos = ["Todos", ...Array.from(new Set(pleitos.map((p) => getMes(p.dataEntrada)).filter(Boolean) as string[])).sort()];
+  const gerentesUnicos = ["Todos", ...Array.from(new Set(pleitos.map((p) => p.gerente).filter((g) => g !== "—"))).sort()];
+  const mesesUnicos    = ["Todos", ...Array.from(new Set(pleitos.map((p) => getMes(p.dataEntrada)).filter(Boolean) as string[])).sort()];
 
   const filtrados = pleitos.filter((p) => {
-    if (filtroFase !== "Todos" && p.fase !== filtroFase) return false;
-    if (filtroResp !== "Todos" && p.responsavel !== filtroResp) return false;
-    if (filtroMes  !== "Todos" && getMes(p.dataEntrada) !== filtroMes) return false;
+    if (filtroFase    !== "Todos" && p.fase    !== filtroFase)    return false;
+    if (filtroGerente !== "Todos" && p.gerente !== filtroGerente) return false;
+    if (filtroMes     !== "Todos" && getMes(p.dataEntrada) !== filtroMes) return false;
     if (busca && !p.razaoSocial.toLowerCase().includes(busca.toLowerCase())) return false;
     return true;
   });
@@ -485,9 +485,9 @@ export default function AnaliseCreditoPage() {
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {fasesUnicas.map((f) => <option key={f}>{f}</option>)}
               </select>
-              <select value={filtroResp} onChange={(e) => setFiltroResp(e.target.value)}
+              <select value={filtroGerente} onChange={(e) => setFiltroGerente(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
-                {respsUnicos.map((r) => <option key={r}>{r}</option>)}
+                {gerentesUnicos.map((g) => <option key={g}>{g}</option>)}
               </select>
               <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
@@ -501,7 +501,7 @@ export default function AnaliseCreditoPage() {
                 <tr className="border-b border-cf-surface">
                   <th className="px-6 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">CNPJ</th>
-                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Responsável</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Gerente</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Fase</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
                   <th className="px-4 py-3 text-right font-semibold text-cf-text3 uppercase tracking-wide">Dias na Fase</th>
@@ -516,7 +516,7 @@ export default function AnaliseCreditoPage() {
                   >
                     <td className="px-6 py-3 font-medium text-cf-text1 max-w-[220px] truncate">{p.razaoSocial}</td>
                     <td className="px-4 py-3 text-cf-text3 font-mono">{p.cnpj || "—"}</td>
-                    <td className="px-4 py-3 text-cf-text2">{p.responsavel}</td>
+                    <td className="px-4 py-3 text-cf-text2">{p.gerente}</td>
                     <td className="px-4 py-3">
                       <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border whitespace-nowrap", faseColor(p.fase))}>
                         {p.fase}
