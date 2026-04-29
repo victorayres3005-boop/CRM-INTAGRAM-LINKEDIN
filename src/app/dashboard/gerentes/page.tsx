@@ -8,7 +8,7 @@ import {
 } from "recharts";
 import {
   CheckCircle2, XCircle, Clock, TrendingUp,
-  RefreshCw, FileSpreadsheet, AlertCircle, Mail, Phone, BadgeCheck,
+  RefreshCw, FileSpreadsheet, AlertCircle, Mail, Phone, BadgeCheck, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cadastro, GerenteInfo } from "@/app/api/gerentes/route";
@@ -42,7 +42,6 @@ function etapaColor(etapa: string): string {
   return "bg-blue-50 text-blue-700 border-blue-100";
 }
 
-// Gera cor determinística baseada no nome
 const AVATAR_COLORS = [
   ["#203b88", "#e8edf8"],
   ["#73b815", "#eef7dc"],
@@ -66,18 +65,15 @@ function initials(nome: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// Formata telefone brasileiro: "5519994186890" ou "19 99418-6890" → "(19) 99418-6890"
 function formatPhone(raw: string): string {
   if (!raw || raw === "N/A") return "";
   const digits = raw.replace(/\D/g, "");
-  // Remove DDI 55 se total >= 12 dígitos
   const local = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
   if (local.length === 11) return `(${local.slice(0, 2)}) ${local.slice(2, 7)}-${local.slice(7)}`;
   if (local.length === 10) return `(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
-  return raw; // fallback sem formatação
+  return raw;
 }
 
-// Resolve o nome do arquivo de foto: tenta nome completo primeiro, depois apelidos
 const APELIDO_FOTO: Record<string, string> = {
   "gleyson":     "Gleyson Azevedo",
   "celio":       "Célio",
@@ -99,7 +95,7 @@ function fotoNome(nome: string): string {
   return APELIDO_FOTO[nome.toLowerCase()] ?? nome;
 }
 
-// ── Avatar com foto ou iniciais ───────────────────────────────────────────────
+// ── Avatar ────────────────────────────────────────────────────────────────────
 
 const PHOTO_EXTS = [".png", ".jpg", ".jpeg"];
 
@@ -151,20 +147,20 @@ function BrandTooltip({ active, payload, label }: any) {
 // ── Card de gerente ───────────────────────────────────────────────────────────
 
 function CardGerente({
-  info,
-  stats,
-  idx,
+  info, stats, idx, onClick,
 }: {
   info: GerenteInfo;
   stats: { total: number; ativados: number; liberados: number; negados: number; emAnalise: number; taxa: number };
   idx: number;
+  onClick: () => void;
 }) {
   return (
     <div
-      className="cf-card flex flex-col hover:shadow-cf-lg hover:-translate-y-0.5 transition-all duration-200 animate-fade-in overflow-hidden"
+      onClick={onClick}
+      className="cf-card flex flex-col hover:shadow-cf-lg hover:-translate-y-0.5 transition-all duration-200 animate-fade-in overflow-hidden cursor-pointer hover:ring-2 hover:ring-cf-navy/20 active:scale-[0.98]"
       style={{ animationDelay: `${idx * 0.05}s` }}
     >
-      {/* Cabeçalho azul com avatar e nome */}
+      {/* Cabeçalho */}
       <div className="px-5 pt-5 pb-4 flex items-center gap-3 bg-gradient-to-br from-cf-navy/[0.04] to-transparent border-b border-cf-surface">
         <AvatarGerente nome={info.nome} size={48} className="ring-2 ring-white shadow" />
         <div className="min-w-0 flex-1">
@@ -179,23 +175,7 @@ function CardGerente({
         </div>
       </div>
 
-      {/* Dados do gerente */}
-      <div className="px-5 py-3 space-y-1.5 border-b border-cf-surface">
-        <div className="flex items-start gap-2 text-[11px]">
-          <span className="text-cf-text3 w-16 shrink-0">Supervisor</span>
-          <span className="text-cf-text2 font-medium truncate">{info.supervisor || "—"}</span>
-        </div>
-        <div className="flex items-start gap-2 text-[11px]">
-          <Mail size={11} className="mt-0.5 shrink-0 text-cf-navy/50" />
-          <span className="text-cf-text2 break-all leading-tight">{info.email ? info.email.split(";")[0].trim() : "—"}</span>
-        </div>
-        <div className="flex items-center gap-2 text-[11px]">
-          <Phone size={11} className="shrink-0 text-cf-navy/50" />
-          <span className="text-cf-text2">{formatPhone(info.telefone) || "—"}</span>
-        </div>
-      </div>
-
-      {/* Métricas */}
+      {/* Métricas resumidas */}
       <div className="px-5 py-4 flex-1">
         <div className="grid grid-cols-3 gap-2 text-center mb-2">
           <div className="bg-cf-bg rounded-lg py-2 px-1">
@@ -226,13 +206,213 @@ function CardGerente({
           </div>
         </div>
       </div>
+
+      {/* Hint de clique */}
+      <div className="px-5 py-2.5 border-t border-cf-surface bg-cf-bg/40 flex items-center justify-center gap-1.5">
+        <span className="text-[10px] text-cf-text3">Ver detalhes</span>
+        <span className="text-[10px] text-cf-navy/40">→</span>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal de gerente ──────────────────────────────────────────────────────────
+
+function GerenteModal({
+  info,
+  stats,
+  cadastros,
+  onClose,
+}: {
+  info: GerenteInfo;
+  stats: { total: number; ativados: number; liberados: number; negados: number; emAnalise: number; taxa: number };
+  cadastros: Cadastro[];
+  onClose: () => void;
+}) {
+  // Fecha com Escape
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Bloqueia scroll do body
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const porEtapa = Array.from(
+    cadastros.reduce((m, c) => {
+      m.set(c.etapaFunil, (m.get(c.etapaFunil) ?? 0) + 1);
+      return m;
+    }, new Map<string, number>())
+  ).map(([etapa, count]) => ({ etapa, count })).sort((a, b) => b.count - a.count);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-cf-navy/40 backdrop-blur-sm" />
+
+      {/* Painel */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+
+        {/* Header do modal */}
+        <div className="bg-gradient-to-br from-cf-navy to-cf-navy/80 px-6 py-5 flex items-center gap-4 shrink-0">
+          <AvatarGerente nome={info.nome} size={64} className="ring-2 ring-white/30 shadow-lg" />
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-white truncate">{info.nome}</h2>
+            {info.exclusividade && (
+              <span className="inline-block mt-1 text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-white/15 text-white/80">
+                {info.exclusividade}
+              </span>
+            )}
+            <div className="flex flex-wrap gap-3 mt-2.5">
+              {info.supervisor && (
+                <span className="text-[11px] text-white/60">
+                  Supervisor: <span className="text-white/90 font-medium">{info.supervisor}</span>
+                </span>
+              )}
+              {info.email && (
+                <a
+                  href={`mailto:${info.email.split(";")[0].trim()}`}
+                  className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Mail size={11} />
+                  {info.email.split(";")[0].trim()}
+                </a>
+              )}
+              {formatPhone(info.telefone) && (
+                <a
+                  href={`tel:${info.telefone}`}
+                  className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Phone size={11} />
+                  {formatPhone(info.telefone)}
+                </a>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-5 divide-x divide-cf-surface border-b border-cf-surface shrink-0">
+          {[
+            { label: "Total",      value: stats.total,     color: "text-cf-text1"    },
+            { label: "Ativados",   value: stats.ativados,  color: "text-emerald-600" },
+            { label: "Liberados",  value: stats.liberados, color: "text-cf-green"    },
+            { label: "Negados",    value: stats.negados,   color: "text-red-500"     },
+            { label: "Conversão",  value: `${stats.taxa}%`,color: "text-cf-navy"     },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="py-3 px-4 text-center bg-cf-bg/30">
+              <p className={cn("cf-metric text-xl font-bold", color)}>{value}</p>
+              <p className="text-[10px] text-cf-text3 mt-0.5 uppercase tracking-wide">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Corpo scrollável */}
+        <div className="overflow-y-auto flex-1">
+
+          {/* Mini-gráfico por etapa */}
+          {porEtapa.length > 0 && (
+            <div className="px-6 pt-5 pb-4 border-b border-cf-surface">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-1 h-3.5 rounded-full bg-cf-navy shrink-0" />
+                <p className="text-xs font-semibold text-cf-text2">Cadastros por Etapa</p>
+              </div>
+              <ResponsiveContainer width="100%" height={Math.max(80, porEtapa.length * 28)}>
+                <BarChart data={porEtapa} layout="vertical" barSize={12}>
+                  <defs>
+                    <linearGradient id="mgNavy" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
+                      <stop offset="100%" stopColor="#1a4fa8" stopOpacity={0.7} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis dataKey="etapa" type="category" tick={{ fontSize: 10, fill: "#374151" }} width={110} axisLine={false} tickLine={false} />
+                  <Tooltip content={<BrandTooltip />} />
+                  <Bar dataKey="count" fill="url(#mgNavy)" radius={[0, 4, 4, 0]} name="Cadastros" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Tabela de cadastros */}
+          <div>
+            <div className="px-6 py-3.5 border-b border-cf-surface bg-cf-bg/40 flex items-center gap-2">
+              <div className="w-1 h-3.5 rounded-full bg-cf-green shrink-0" />
+              <p className="text-xs font-semibold text-cf-text2">
+                Todos os Cadastros
+                <span className="ml-1.5 font-normal text-cf-text3">({cadastros.length})</span>
+              </p>
+            </div>
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-cf-surface">
+                  <th className="px-6 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
+                  <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa</th>
+                  <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cadastros
+                  .sort((a, b) => {
+                    if (!a.dataEntrada) return 1;
+                    if (!b.dataEntrada) return -1;
+                    return b.dataEntrada.localeCompare(a.dataEntrada);
+                  })
+                  .map((c) => (
+                    <tr key={c.id} className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors">
+                      <td className="px-6 py-2.5 font-medium text-cf-text1 max-w-[240px] truncate">{c.nomeGrupo}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-full font-medium text-[11px] border",
+                          etapaColor(c.etapaFunil)
+                        )}>
+                          {c.etapaFunil}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-cf-text3">
+                        {c.dataEntrada
+                          ? new Date(c.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "2-digit" })
+                          : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                {cadastros.length === 0 && (
+                  <tr>
+                    <td colSpan={3} className="px-6 py-8 text-center text-cf-text3">
+                      Nenhum cadastro encontrado para este gerente.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
 
-const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutos
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
 export default function GerentesPage() {
   const [cadastros, setCadastros] = useState<Cadastro[]>([]);
@@ -249,6 +429,8 @@ export default function GerentesPage() {
   const [filtroGerente, setFiltroGerente] = useState("Todos");
   const [filtroEtapa, setFiltroEtapa] = useState("Todos");
   const [filtroMes, setFiltroMes] = useState("Todos");
+
+  const [modalGerente, setModalGerente] = useState<string | null>(null);
 
   async function carregar(isAuto = false) {
     if (isAuto) setRefreshing(true);
@@ -277,15 +459,10 @@ export default function GerentesPage() {
 
   useEffect(() => {
     carregar();
-
-    // Auto-refresh a cada 5 minutos
     intervalRef.current = setInterval(() => carregar(true), REFRESH_INTERVAL_MS);
-
-    // Countdown visual (decrementa a cada segundo)
     countdownRef.current = setInterval(() => {
       setCountdown((prev) => (prev <= 1 ? REFRESH_INTERVAL_MS / 1000 : prev - 1));
     }, 1000);
-
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (countdownRef.current) clearInterval(countdownRef.current);
@@ -318,7 +495,6 @@ export default function GerentesPage() {
   const emAnalise = total - ativados - liberados - negados;
   const taxaLib   = total > 0 ? Math.round(((ativados + liberados) / total) * 100) : 0;
 
-  // Stats por gerente (todos os cadastros, sem filtro de mês/etapa, para os cards)
   const statsPorGerente = cadastros.reduce((m, c) => {
     if (!c.gerente) return m;
     const cur = m.get(c.gerente) ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
@@ -331,7 +507,6 @@ export default function GerentesPage() {
     return m;
   }, new Map<string, { total: number; ativados: number; liberados: number; negados: number; emAnalise: number }>());
 
-  // Top 12 para o gráfico
   const porGerente = Array.from(
     filtrados.reduce((m, c) => {
       if (!c.gerente) return m;
@@ -358,6 +533,14 @@ export default function GerentesPage() {
       };
     });
 
+  // Dados do modal
+  const gerenteModalInfo = gerentes.find((g) => g.nome === modalGerente) ?? null;
+  const cadastrosModal   = cadastros.filter((c) => c.gerente === modalGerente);
+  const statsModal       = (() => {
+    const s = statsPorGerente.get(modalGerente ?? "") ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
+    return { ...s, taxa: s.total > 0 ? Math.round(((s.ativados + s.liberados) / s.total) * 100) : 0 };
+  })();
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -380,247 +563,259 @@ export default function GerentesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Cabeçalho */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-cf-text1">Pipeline de Captação</h2>
-            {refreshing && (
-              <RefreshCw size={12} className="animate-spin text-cf-navy opacity-50" />
-            )}
-          </div>
-          <div className="flex items-center gap-3 mt-0.5">
-            {lastRefresh && (
-              <p className="text-xs text-cf-text3">
-                Atualizado às{" "}
-                <span className="text-cf-text2 font-medium">
-                  {lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </p>
-            )}
-            <span className="text-[10px] text-cf-text3 bg-cf-bg border border-cf-border rounded px-1.5 py-0.5">
-              próxima em {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, "0")}
-            </span>
-            {meta?.hasExcel && (
-              <span className="text-[10px] text-cf-green bg-cf-green-pale border border-cf-green/20 rounded px-1.5 py-0.5">
-                + Excel
-              </span>
-            )}
-          </div>
-        </div>
-        <button
-          onClick={() => carregar(false)}
-          className="flex items-center gap-2 text-xs font-medium text-cf-navy border border-cf-navy/30 px-3 py-2 rounded-lg hover:bg-cf-navy/5 transition-colors"
-        >
-          <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
-          Sincronizar agora
-        </button>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
-        {[
-          { label: "Total Cadastros",  value: total,          icon: FileSpreadsheet, color: "navy"    as const },
-          { label: "Ativados",         value: ativados,       icon: BadgeCheck,      color: "teal"    as const },
-          { label: "Liberados",        value: liberados,      icon: CheckCircle2,    color: "green"   as const },
-          { label: "Em Análise",       value: emAnalise,      icon: Clock,           color: "warning" as const },
-          { label: "Negados",          value: negados,        icon: XCircle,         color: "danger"  as const },
-        ].map(({ label, value, icon: Icon, color }, idx) => {
-          const colors = {
-            navy:    { top: "border-t-cf-navy",     from: "from-cf-navy/[0.04]",  bg: "bg-cf-navy/10",     ic: "text-cf-navy"    },
-            teal:    { top: "border-t-emerald-500", from: "from-emerald-50",      bg: "bg-emerald-100",    ic: "text-emerald-600"},
-            green:   { top: "border-t-cf-green",    from: "from-cf-green-pale",   bg: "bg-cf-green-pale",  ic: "text-cf-green"   },
-            warning: { top: "border-t-amber-400",   from: "from-amber-50",        bg: "bg-amber-50",       ic: "text-amber-600"  },
-            danger:  { top: "border-t-red-400",     from: "from-red-50",          bg: "bg-red-50",         ic: "text-red-600"    },
-          };
-          const c = colors[color];
-          return (
-            <div
-              key={label}
-              className={cn(
-                "rounded-card border border-cf-surface shadow-cf-md border-t-4 bg-gradient-to-b to-white",
-                "p-4 flex items-start gap-3 animate-fade-in hover:shadow-cf-lg hover:-translate-y-0.5 transition-all duration-200",
-                c.top, c.from
-              )}
-              style={{ animationDelay: `${idx * 0.06}s` }}
-            >
-              <div className={cn("p-2.5 rounded-xl shadow-sm", c.bg)}>
-                <Icon size={18} className={c.ic} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-cf-text3 uppercase tracking-wide leading-tight">{label}</p>
-                <p className="cf-metric text-2xl text-cf-text1 mt-1">{value}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Cards de gerentes */}
-      {gerentes.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
-            <h3 className="text-sm font-semibold text-cf-text2">Equipe de Gerentes</h3>
-            <span className="text-xs text-cf-text3">({gerentes.length})</span>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {gerentes.map((g, i) => {
-              const s = statsPorGerente.get(g.nome) ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
-              const taxa = s.total > 0 ? Math.round(((s.ativados + s.liberados) / s.total) * 100) : 0;
-              return (
-                <CardGerente
-                  key={g.nome}
-                  info={g}
-                  stats={{ ...s, taxa }}
-                  idx={i}
-                />
-              );
-            })}
-          </div>
-        </div>
+    <>
+      {/* Modal */}
+      {modalGerente && gerenteModalInfo && (
+        <GerenteModal
+          info={gerenteModalInfo}
+          stats={statsModal}
+          cadastros={cadastrosModal}
+          onClose={() => setModalGerente(null)}
+        />
       )}
 
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-        {/* Por gerente */}
-        <div className="cf-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
-            <h3 className="text-sm font-semibold text-cf-text2">Cadastros por Gerente</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={Math.max(220, porGerente.length * 28)}>
-            <BarChart data={porGerente} layout="vertical" barSize={14}>
-              <defs>
-                <linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#1a4fa8" stopOpacity={0.75} />
-                </linearGradient>
-                <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#73b815" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#73b815" stopOpacity={0.7} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
-              <YAxis dataKey="gerente" type="category" tick={{ fontSize: 11, fill: "#374151" }} width={110} axisLine={false} tickLine={false} />
-              <Tooltip content={<BrandTooltip />} />
-              <Bar dataKey="total"    fill="url(#gNavy)"  radius={[0, 4, 4, 0]} name="Total" />
-              <Bar dataKey="ativados" fill="url(#gGreen)" radius={[0, 4, 4, 0]} name="Ativados" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Evolução mensal */}
-        <div className="cf-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-1 h-4 rounded-full bg-cf-green shrink-0" />
-            <h3 className="text-sm font-semibold text-cf-text2">Evolução Mensal</h3>
-          </div>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={porMes} barSize={24}>
-              <defs>
-                <linearGradient id="gTotalMes" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#203b88" stopOpacity={0.65} />
-                </linearGradient>
-                <linearGradient id="gAtivMes" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#73b815" stopOpacity={1} />
-                  <stop offset="100%" stopColor="#73b815" stopOpacity={0.65} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" vertical={false} />
-              <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
-              <Tooltip content={<BrandTooltip />} />
-              <Bar dataKey="total"    fill="url(#gTotalMes)" radius={[5, 5, 0, 0]} name="Total" />
-              <Bar dataKey="ativados" fill="url(#gAtivMes)"  radius={[5, 5, 0, 0]} name="Ativados" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Tabela de cadastros */}
-      <div className="cf-card">
-        <div className="px-6 py-4 border-b border-cf-surface bg-cf-bg/40 flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
-            <h3 className="text-sm font-semibold text-cf-text2">
-              Todos os Cadastros
-              <span className="ml-2 text-xs font-normal text-cf-text3">({filtrados.length})</span>
-            </h3>
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <select
-              value={filtroGerente}
-              onChange={(e) => setFiltroGerente(e.target.value)}
-              className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-            >
-              {gerentesUnicos.map((g) => <option key={g}>{g}</option>)}
-            </select>
-            <select
-              value={filtroEtapa}
-              onChange={(e) => setFiltroEtapa(e.target.value)}
-              className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-            >
-              {etapasUnicas.map((e) => <option key={e}>{e}</option>)}
-            </select>
-            <select
-              value={filtroMes}
-              onChange={(e) => setFiltroMes(e.target.value)}
-              className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-            >
-              {mesesUnicos.map((m) => <option key={m} value={m}>{m === "Todos" ? "Todos os meses" : mesLabel(m)}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-cf-surface">
-                <th className="px-6 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
-                <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Gerente</th>
-                <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
-                <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa do Funil</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtrados.map((c) => (
-                <tr key={c.id} className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors">
-                  <td className="px-6 py-3 font-medium text-cf-text1 max-w-[280px] truncate">{c.nomeGrupo}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <AvatarGerente nome={c.gerente || "?"} size={26} />
-                      <span className="text-cf-text2">{c.gerente}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-cf-text3">
-                    {c.dataEntrada
-                      ? new Date(c.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
-                      : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={cn(
-                      "px-2 py-0.5 rounded-full font-medium text-[11px] border",
-                      etapaColor(c.etapaFunil)
-                    )}>
-                      {c.etapaFunil}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-              {filtrados.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-cf-text3">
-                    Nenhum cadastro encontrado com esses filtros.
-                  </td>
-                </tr>
+      <div className="space-y-6">
+        {/* Cabeçalho */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-semibold text-cf-text1">Pipeline de Captação</h2>
+              {refreshing && <RefreshCw size={12} className="animate-spin text-cf-navy opacity-50" />}
+            </div>
+            <div className="flex items-center gap-3 mt-0.5">
+              {lastRefresh && (
+                <p className="text-xs text-cf-text3">
+                  Atualizado às{" "}
+                  <span className="text-cf-text2 font-medium">
+                    {lastRefresh.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </p>
               )}
-            </tbody>
-          </table>
+              <span className="text-[10px] text-cf-text3 bg-cf-bg border border-cf-border rounded px-1.5 py-0.5">
+                próxima em {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, "0")}
+              </span>
+              {meta?.hasExcel && (
+                <span className="text-[10px] text-cf-green bg-cf-green-pale border border-cf-green/20 rounded px-1.5 py-0.5">
+                  + Excel
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => carregar(false)}
+            className="flex items-center gap-2 text-xs font-medium text-cf-navy border border-cf-navy/30 px-3 py-2 rounded-lg hover:bg-cf-navy/5 transition-colors"
+          >
+            <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+            Sincronizar agora
+          </button>
+        </div>
+
+        {/* KPIs */}
+        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+          {[
+            { label: "Total Cadastros", value: total,     icon: FileSpreadsheet, color: "navy"    as const },
+            { label: "Ativados",        value: ativados,  icon: BadgeCheck,      color: "teal"    as const },
+            { label: "Liberados",       value: liberados, icon: CheckCircle2,    color: "green"   as const },
+            { label: "Em Análise",      value: emAnalise, icon: Clock,           color: "warning" as const },
+            { label: "Negados",         value: negados,   icon: XCircle,         color: "danger"  as const },
+          ].map(({ label, value, icon: Icon, color }, idx) => {
+            const colors = {
+              navy:    { top: "border-t-cf-navy",     from: "from-cf-navy/[0.04]",  bg: "bg-cf-navy/10",     ic: "text-cf-navy"    },
+              teal:    { top: "border-t-emerald-500", from: "from-emerald-50",      bg: "bg-emerald-100",    ic: "text-emerald-600"},
+              green:   { top: "border-t-cf-green",    from: "from-cf-green-pale",   bg: "bg-cf-green-pale",  ic: "text-cf-green"   },
+              warning: { top: "border-t-amber-400",   from: "from-amber-50",        bg: "bg-amber-50",       ic: "text-amber-600"  },
+              danger:  { top: "border-t-red-400",     from: "from-red-50",          bg: "bg-red-50",         ic: "text-red-600"    },
+            };
+            const c = colors[color];
+            return (
+              <div
+                key={label}
+                className={cn(
+                  "rounded-card border border-cf-surface shadow-cf-md border-t-4 bg-gradient-to-b to-white",
+                  "p-4 flex items-start gap-3 animate-fade-in hover:shadow-cf-lg hover:-translate-y-0.5 transition-all duration-200",
+                  c.top, c.from
+                )}
+                style={{ animationDelay: `${idx * 0.06}s` }}
+              >
+                <div className={cn("p-2.5 rounded-xl shadow-sm", c.bg)}>
+                  <Icon size={18} className={c.ic} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-cf-text3 uppercase tracking-wide leading-tight">{label}</p>
+                  <p className="cf-metric text-2xl text-cf-text1 mt-1">{value}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Cards de gerentes */}
+        {gerentes.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
+              <h3 className="text-sm font-semibold text-cf-text2">Equipe de Gerentes</h3>
+              <span className="text-xs text-cf-text3">({gerentes.length})</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+              {gerentes.map((g, i) => {
+                const s = statsPorGerente.get(g.nome) ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
+                const taxa = s.total > 0 ? Math.round(((s.ativados + s.liberados) / s.total) * 100) : 0;
+                return (
+                  <CardGerente
+                    key={g.nome}
+                    info={g}
+                    stats={{ ...s, taxa }}
+                    idx={i}
+                    onClick={() => setModalGerente(g.nome)}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Gráficos */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <div className="cf-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
+              <h3 className="text-sm font-semibold text-cf-text2">Cadastros por Gerente</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={Math.max(220, porGerente.length * 28)}>
+              <BarChart data={porGerente} layout="vertical" barSize={14}>
+                <defs>
+                  <linearGradient id="gNavy" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#1a4fa8" stopOpacity={0.75} />
+                  </linearGradient>
+                  <linearGradient id="gGreen" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#73b815" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#73b815" stopOpacity={0.7} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="gerente" type="category" tick={{ fontSize: 11, fill: "#374151" }} width={110} axisLine={false} tickLine={false} />
+                <Tooltip content={<BrandTooltip />} />
+                <Bar dataKey="total"    fill="url(#gNavy)"  radius={[0, 4, 4, 0]} name="Total" />
+                <Bar dataKey="ativados" fill="url(#gGreen)" radius={[0, 4, 4, 0]} name="Ativados" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="cf-card p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-1 h-4 rounded-full bg-cf-green shrink-0" />
+              <h3 className="text-sm font-semibold text-cf-text2">Evolução Mensal</h3>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={porMes} barSize={24}>
+                <defs>
+                  <linearGradient id="gTotalMes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#203b88" stopOpacity={0.65} />
+                  </linearGradient>
+                  <linearGradient id="gAtivMes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#73b815" stopOpacity={1} />
+                    <stop offset="100%" stopColor="#73b815" stopOpacity={0.65} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
+                <Tooltip content={<BrandTooltip />} />
+                <Bar dataKey="total"    fill="url(#gTotalMes)" radius={[5, 5, 0, 0]} name="Total" />
+                <Bar dataKey="ativados" fill="url(#gAtivMes)"  radius={[5, 5, 0, 0]} name="Ativados" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Tabela de cadastros */}
+        <div className="cf-card">
+          <div className="px-6 py-4 border-b border-cf-surface bg-cf-bg/40 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
+              <h3 className="text-sm font-semibold text-cf-text2">
+                Todos os Cadastros
+                <span className="ml-2 text-xs font-normal text-cf-text3">({filtrados.length})</span>
+              </h3>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <select
+                value={filtroGerente}
+                onChange={(e) => setFiltroGerente(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
+              >
+                {gerentesUnicos.map((g) => <option key={g}>{g}</option>)}
+              </select>
+              <select
+                value={filtroEtapa}
+                onChange={(e) => setFiltroEtapa(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
+              >
+                {etapasUnicas.map((e) => <option key={e}>{e}</option>)}
+              </select>
+              <select
+                value={filtroMes}
+                onChange={(e) => setFiltroMes(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
+              >
+                {mesesUnicos.map((m) => <option key={m} value={m}>{m === "Todos" ? "Todos os meses" : mesLabel(m)}</option>)}
+              </select>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-cf-surface">
+                  <th className="px-6 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Gerente</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa do Funil</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtrados.map((c) => (
+                  <tr key={c.id} className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors">
+                    <td className="px-6 py-3 font-medium text-cf-text1 max-w-[280px] truncate">{c.nomeGrupo}</td>
+                    <td className="px-4 py-3">
+                      <div
+                        className="flex items-center gap-2 cursor-pointer group"
+                        onClick={() => setModalGerente(c.gerente)}
+                      >
+                        <AvatarGerente nome={c.gerente || "?"} size={26} />
+                        <span className="text-cf-text2 group-hover:text-cf-navy group-hover:underline transition-colors">{c.gerente}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-cf-text3">
+                      {c.dataEntrada
+                        ? new Date(c.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-full font-medium text-[11px] border",
+                        etapaColor(c.etapaFunil)
+                      )}>
+                        {c.etapaFunil}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+                {filtrados.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-10 text-center text-cf-text3">
+                      Nenhum cadastro encontrado com esses filtros.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
