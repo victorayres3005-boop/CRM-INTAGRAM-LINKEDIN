@@ -7,8 +7,8 @@ import {
 } from "recharts";
 import {
   CheckCircle2, XCircle, Clock, AlertCircle,
-  RefreshCw, FileSearch, HelpCircle, ArrowUpCircle, Search, X,
-  Building2, Hash, User, Calendar, Timer, AlignLeft,
+  RefreshCw, FileSearch, HelpCircle, Search, X,
+  Hash, User, Calendar, Timer, AlignLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CardCredito } from "@/app/api/analise-credito/route";
@@ -198,70 +198,6 @@ function CardModal({ card, onClose }: { card: CardCredito; onClose: () => void }
             )}
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Gargalo por fase ──────────────────────────────────────────────────────────
-
-function GargaloSection({ pleitos }: { pleitos: CardCredito[] }) {
-  const porFase = Array.from(
-    pleitos.reduce((m, p) => {
-      const cur = m.get(p.fase) ?? { count: 0, totalDias: 0 };
-      cur.count++;
-      cur.totalDias += p.diasNaFase;
-      m.set(p.fase, cur);
-      return m;
-    }, new Map<string, { count: number; totalDias: number }>())
-  )
-    .map(([fase, { count, totalDias }]) => ({
-      fase,
-      count,
-      mediaDias: count > 0 ? Math.round(totalDias / count) : 0,
-    }))
-    .filter((f) => !FASES_APROVADO.has(f.fase) && !FASES_NEGADO.has(f.fase))
-    .sort((a, b) => b.mediaDias - a.mediaDias)
-    .slice(0, 6);
-
-  if (porFase.length === 0) return null;
-
-  return (
-    <div className="cf-card p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-1 h-4 rounded-full bg-red-400 shrink-0" />
-        <h3 className="text-sm font-semibold text-cf-text2">Gargalos por Fase</h3>
-        <span className="text-[10px] text-cf-text3 ml-1">— fases ativas, ordenadas por tempo médio</span>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-        {porFase.map(({ fase, count, mediaDias }) => (
-          <div
-            key={fase}
-            className={cn(
-              "rounded-xl border p-3.5 flex flex-col gap-2",
-              mediaDias > 14 ? "bg-red-50 border-red-200" :
-              mediaDias > 7  ? "bg-amber-50 border-amber-200" :
-                               "bg-cf-bg border-cf-surface"
-            )}
-          >
-            <span className={cn(
-              "text-[10px] font-medium px-2 py-0.5 rounded-full border self-start leading-tight",
-              faseColor(fase)
-            )}>
-              {fase}
-            </span>
-            <div className="flex items-end justify-between gap-2 mt-1">
-              <div>
-                <p className="cf-metric text-xl font-bold text-cf-text1">{count}</p>
-                <p className="text-[10px] text-cf-text3">cards</p>
-              </div>
-              <div className="text-right">
-                <p className={cn("cf-metric text-base font-bold", diasColor(mediaDias))}>{mediaDias}d</p>
-                <p className="text-[10px] text-cf-text3">média</p>
-              </div>
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -462,9 +398,6 @@ export default function AnaliseCreditoPage() {
             );
           })}
         </div>
-
-        {/* Gargalos */}
-        <GargaloSection pleitos={pleitos} />
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
