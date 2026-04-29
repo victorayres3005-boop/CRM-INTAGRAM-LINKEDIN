@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Briefcase, CreditCard, GitMerge, RotateCcw, ClipboardList, Settings,
+  Briefcase, CreditCard, GitMerge, RotateCcw, ClipboardList, FilePen, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoFull } from "./LogoFull";
 
 const navItems = [
-  { href: "/dashboard/gerentes",        label: "Gerentes",           icon: Briefcase },
-  { href: "/dashboard/analise-credito", label: "Análise de Crédito", icon: CreditCard },
-  { href: "/dashboard/esteira-credito", label: "Esteira de Crédito", icon: GitMerge },
-  { href: "/dashboard/reanalise",       label: "Reanálise",          icon: RotateCcw },
-  { href: "/dashboard/ficha-pj",        label: "Ficha PF/PJ",        icon: ClipboardList },
-  { href: "/dashboard/configuracoes",   label: "Configurações",      icon: Settings },
+  { href: "/dashboard/gerentes",              label: "Gerentes",             icon: Briefcase },
+  { href: "/dashboard/analise-credito",       label: "Análise de Crédito",   icon: CreditCard },
+  { href: "/dashboard/esteira-credito",       label: "Esteira de Crédito",   icon: GitMerge },
+  { href: "/dashboard/reanalise",             label: "Reanálise",            icon: RotateCcw },
+  { href: "/dashboard/alteracao-contratual",  label: "Alt. Contratual",      icon: FilePen },
+  { href: "/dashboard/ficha-pj",              label: "Ficha PF/PJ",          icon: ClipboardList },
+  { href: "/dashboard/configuracoes",         label: "Configurações",        icon: Settings },
 ];
 
 export function Sidebar() {

@@ -6,41 +6,39 @@ import {
   ResponsiveContainer, Cell,
 } from "recharts";
 import {
-  CheckCircle2, XCircle, Clock, AlertCircle,
-  RefreshCw, RotateCcw, Users2, Search, X,
-  Briefcase, Calendar, Timer,
+  CheckCircle2, Clock, AlertCircle,
+  RefreshCw, FilePen, Search, X,
+  FileText, Calendar, Timer, Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { CardReanalise } from "@/app/api/reanalise/route";
+import type { CardAlteracao } from "@/app/api/alteracao-contratual/route";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const FASES_CONCLUIDO    = new Set(["Concluído"]);
-const FASES_CANCELADO    = new Set(["Cancelado"]);
-const FASES_COMITE       = new Set(["Comitê", "Questionamentos"]);
+const FASES_CONCLUIDO = new Set(["Concluído"]);
+const FASES_AGUARDANDO = new Set(["Aguardando Documentos"]);
 
 const ORDEM_FASE: Record<string, number> = {
-  "Entrada":        0,
-  "Em Análise":     1,
-  "Comitê":         2,
-  "Questionamentos":3,
-  "Concluído":      4,
-  "Cancelado":      5,
+  "Entrada":               0,
+  "Análise":               1,
+  "Aguardando Documentos": 2,
+  "Formalização":          3,
+  "Concluído":             4,
 };
 
 function faseColor(fase: string): string {
-  if (FASES_CONCLUIDO.has(fase)) return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  if (FASES_CANCELADO.has(fase)) return "bg-red-50 text-red-600 border-red-200";
-  if (FASES_COMITE.has(fase))    return "bg-violet-50 text-violet-700 border-violet-200";
-  if (fase === "Em Análise")     return "bg-blue-50 text-blue-700 border-blue-100";
+  if (FASES_CONCLUIDO.has(fase))  return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (FASES_AGUARDANDO.has(fase)) return "bg-amber-50 text-amber-700 border-amber-200";
+  if (fase === "Formalização")    return "bg-violet-50 text-violet-700 border-violet-200";
+  if (fase === "Análise")         return "bg-blue-50 text-blue-700 border-blue-100";
   return "bg-cf-navy/[0.06] text-cf-navy border-cf-navy/15";
 }
 
 function faseFill(fase: string): string {
-  if (FASES_CONCLUIDO.has(fase)) return "#10b981";
-  if (FASES_CANCELADO.has(fase)) return "#ef4444";
-  if (FASES_COMITE.has(fase))    return "#7c3aed";
-  if (fase === "Em Análise")     return "#3b82f6";
+  if (FASES_CONCLUIDO.has(fase))  return "#10b981";
+  if (FASES_AGUARDANDO.has(fase)) return "#f59e0b";
+  if (fase === "Formalização")    return "#7c3aed";
+  if (fase === "Análise")         return "#3b82f6";
   return "#203b88";
 }
 
@@ -86,7 +84,7 @@ function BrandTooltip({ active, payload, label }: any) {
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
 
-function CardModal({ card, onClose }: { card: CardReanalise; onClose: () => void }) {
+function CardModal({ card, onClose }: { card: CardAlteracao; onClose: () => void }) {
   useEffect(() => {
     const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", fn);
@@ -104,12 +102,11 @@ function CardModal({ card, onClose }: { card: CardReanalise; onClose: () => void
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="absolute inset-0 bg-cf-navy/40 backdrop-blur-sm" />
-
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg animate-fade-in overflow-hidden">
         <div className="bg-gradient-to-br from-cf-navy to-cf-navy/80 px-6 py-5">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-white/50 uppercase tracking-wider mb-1">Reanálise</p>
+              <p className="text-[11px] text-white/50 uppercase tracking-wider mb-1">Alteração Contratual</p>
               <h2 className="text-base font-bold text-white leading-snug">{card.razaoSocial}</h2>
               <div className="mt-2.5">
                 <span className={cn(
@@ -120,10 +117,7 @@ function CardModal({ card, onClose }: { card: CardReanalise; onClose: () => void
                 </span>
               </div>
             </div>
-            <button
-              onClick={onClose}
-              className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white mt-0.5"
-            >
+            <button onClick={onClose} className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white mt-0.5">
               <X size={15} />
             </button>
           </div>
@@ -146,16 +140,15 @@ function CardModal({ card, onClose }: { card: CardReanalise; onClose: () => void
               <p className="text-[11px] text-cf-text3 mt-0.5">na fase atual</p>
             </div>
             {card.diasNaFase > 14 && (
-              <span className="ml-auto text-[10px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
-                Atenção
-              </span>
+              <span className="ml-auto text-[10px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">Atenção</span>
             )}
           </div>
 
           <div className="space-y-3">
             {[
-              { icon: Briefcase, label: "Gerente",         value: card.gerente },
-              { icon: Calendar,  label: "Data de entrada", value: card.dataEntrada
+              { icon: Tag,      label: "Tipo de Alteração", value: card.tipoAlteracao || "—" },
+              { icon: FileText, label: "Data do Alerta",    value: card.dataAlerta || "—" },
+              { icon: Calendar, label: "Data de entrada",   value: card.dataEntrada
                   ? new Date(card.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
                   : "—" },
             ].map(({ icon: Icon, label, value }) => (
@@ -180,8 +173,8 @@ function CardModal({ card, onClose }: { card: CardReanalise; onClose: () => void
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 
-export default function ReanalisePage() {
-  const [cards, setCards] = useState<CardReanalise[]>([]);
+export default function AlteracaoContratualPage() {
+  const [alteracoes, setAlteracoes] = useState<CardAlteracao[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -191,24 +184,24 @@ export default function ReanalisePage() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [filtroFase, setFiltroFase] = useState("Todos");
-  const [filtroGerente, setFiltroGerente] = useState("Todos");
+  const [filtroTipo, setFiltroTipo] = useState("Todos");
   const [filtroMes, setFiltroMes] = useState("Todos");
   const [busca, setBusca] = useState("");
-  const [cardSelecionado, setCardSelecionado] = useState<CardReanalise | null>(null);
+  const [cardSelecionado, setCardSelecionado] = useState<CardAlteracao | null>(null);
 
   async function carregar(isAuto = false) {
     if (isAuto) setRefreshing(true);
     else setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/reanalise", { cache: "no-store" });
+      const res = await fetch("/api/alteracao-contratual", { cache: "no-store" });
       if (!res.ok) {
         const body = await res.json();
         setError(body.error ?? "Erro ao carregar dados.");
         return;
       }
       const data = await res.json();
-      setCards(data.reanalise);
+      setAlteracoes(data.alteracoes);
       setLastRefresh(new Date());
       setCountdown(REFRESH_INTERVAL_MS / 1000);
     } catch {
@@ -233,28 +226,27 @@ export default function ReanalisePage() {
 
   // ── Dados derivados ────────────────────────────────────────────────────────
 
-  const fasesUnicas    = ["Todos", ...Array.from(new Set(cards.map((c) => c.fase).filter(Boolean))).sort(
+  const fasesUnicas = ["Todos", ...Array.from(new Set(alteracoes.map((c) => c.fase).filter(Boolean))).sort(
     (a, b) => (ORDEM_FASE[a] ?? 99) - (ORDEM_FASE[b] ?? 99)
   )];
-  const gerentesUnicos = ["Todos", ...Array.from(new Set(cards.map((c) => c.gerente).filter((g) => g !== "—"))).sort()];
-  const mesesUnicos    = ["Todos", ...Array.from(new Set(cards.map((c) => getMes(c.dataEntrada)).filter(Boolean) as string[])).sort()];
+  const tiposUnicos = ["Todos", ...Array.from(new Set(alteracoes.map((c) => c.tipoAlteracao).filter(Boolean))).sort()];
+  const mesesUnicos = ["Todos", ...Array.from(new Set(alteracoes.map((c) => getMes(c.dataEntrada)).filter(Boolean) as string[])).sort()];
 
-  const filtrados = cards.filter((c) => {
-    if (filtroFase    !== "Todos" && c.fase    !== filtroFase)    return false;
-    if (filtroGerente !== "Todos" && c.gerente !== filtroGerente) return false;
-    if (filtroMes     !== "Todos" && getMes(c.dataEntrada) !== filtroMes) return false;
+  const filtrados = alteracoes.filter((c) => {
+    if (filtroFase !== "Todos" && c.fase          !== filtroFase) return false;
+    if (filtroTipo !== "Todos" && c.tipoAlteracao !== filtroTipo) return false;
+    if (filtroMes  !== "Todos" && getMes(c.dataEntrada) !== filtroMes) return false;
     if (busca && !c.razaoSocial.toLowerCase().includes(busca.toLowerCase())) return false;
     return true;
   });
 
   const total      = filtrados.length;
   const concluidos = filtrados.filter((c) => FASES_CONCLUIDO.has(c.fase)).length;
-  const cancelados = filtrados.filter((c) => FASES_CANCELADO.has(c.fase)).length;
-  const comite     = filtrados.filter((c) => FASES_COMITE.has(c.fase)).length;
-  const emAnalise  = total - concluidos - cancelados - comite;
+  const aguardando = filtrados.filter((c) => FASES_AGUARDANDO.has(c.fase)).length;
+  const emAnalise  = total - concluidos - aguardando;
 
   const porFase = Array.from(
-    cards.reduce((m, c) => {
+    alteracoes.reduce((m, c) => {
       m.set(c.fase, (m.get(c.fase) ?? 0) + 1);
       return m;
     }, new Map<string, number>())
@@ -265,12 +257,11 @@ export default function ReanalisePage() {
   const porMes = mesesUnicos
     .filter((m) => m !== "Todos")
     .map((mes) => {
-      const list = cards.filter((c) => getMes(c.dataEntrada) === mes);
+      const list = alteracoes.filter((c) => getMes(c.dataEntrada) === mes);
       return {
         mes: mesLabel(mes),
         total: list.length,
         concluidos: list.filter((c) => FASES_CONCLUIDO.has(c.fase)).length,
-        cancelados: list.filter((c) => FASES_CANCELADO.has(c.fase)).length,
       };
     });
 
@@ -306,7 +297,7 @@ export default function ReanalisePage() {
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-base font-semibold text-cf-text1">Reanálise</h2>
+              <h2 className="text-base font-semibold text-cf-text1">Alteração Contratual</h2>
               {refreshing && <RefreshCw size={12} className="animate-spin text-cf-navy opacity-50" />}
             </div>
             <div className="flex items-center gap-3 mt-0.5">
@@ -333,18 +324,16 @@ export default function ReanalisePage() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
           {[
-            { label: "Total em Reanálise", value: total,      icon: RotateCcw,    color: "navy"   as const },
-            { label: "Concluídos",         value: concluidos, icon: CheckCircle2, color: "green"  as const },
-            { label: "Em Comitê",          value: comite,     icon: Users2,       color: "violet" as const },
-            { label: "Cancelados",         value: cancelados, icon: XCircle,      color: "danger" as const },
+            { label: "Total",               value: total,      icon: FilePen,      color: "navy"    as const },
+            { label: "Concluídos",          value: concluidos, icon: CheckCircle2, color: "green"   as const },
+            { label: "Aguardando Documentos",value: aguardando, icon: Clock,        color: "warning" as const },
           ].map(({ label, value, icon: Icon, color }, idx) => {
             const colors = {
-              navy:   { top: "border-t-cf-navy",    from: "from-cf-navy/[0.04]", bg: "bg-cf-navy/10",    ic: "text-cf-navy"    },
-              green:  { top: "border-t-cf-green",   from: "from-cf-green-pale",  bg: "bg-cf-green-pale", ic: "text-cf-green"   },
-              violet: { top: "border-t-violet-500", from: "from-violet-50",      bg: "bg-violet-100",    ic: "text-violet-600" },
-              danger: { top: "border-t-red-400",    from: "from-red-50",         bg: "bg-red-50",        ic: "text-red-600"    },
+              navy:    { top: "border-t-cf-navy",   from: "from-cf-navy/[0.04]", bg: "bg-cf-navy/10",    ic: "text-cf-navy"   },
+              green:   { top: "border-t-cf-green",  from: "from-cf-green-pale",  bg: "bg-cf-green-pale", ic: "text-cf-green"  },
+              warning: { top: "border-t-amber-400", from: "from-amber-50",       bg: "bg-amber-50",      ic: "text-amber-600" },
             };
             const c = colors[color];
             return (
@@ -376,11 +365,11 @@ export default function ReanalisePage() {
               <div className="w-1 h-4 rounded-full bg-cf-navy shrink-0" />
               <h3 className="text-sm font-semibold text-cf-text2">Cards por Fase</h3>
             </div>
-            <ResponsiveContainer width="100%" height={Math.max(180, porFase.length * 34)}>
+            <ResponsiveContainer width="100%" height={Math.max(160, porFase.length * 34)}>
               <BarChart data={porFase} layout="vertical" barSize={14}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <YAxis dataKey="fase" type="category" tick={{ fontSize: 10, fill: "#374151" }} width={120} axisLine={false} tickLine={false} />
+                <YAxis dataKey="fase" type="category" tick={{ fontSize: 10, fill: "#374151" }} width={145} axisLine={false} tickLine={false} />
                 <Tooltip content={<BrandTooltip />} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]} name="Cards">
                   {porFase.map((entry) => (
@@ -397,28 +386,23 @@ export default function ReanalisePage() {
               <h3 className="text-sm font-semibold text-cf-text2">Evolução Mensal</h3>
             </div>
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={porMes} barSize={20}>
+              <BarChart data={porMes} barSize={24}>
                 <defs>
-                  <linearGradient id="gReanalTotal" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="gAlterTotal" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#203b88" stopOpacity={1} />
                     <stop offset="100%" stopColor="#203b88" stopOpacity={0.65} />
                   </linearGradient>
-                  <linearGradient id="gReanalConc" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="gAlterConc" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#73b815" stopOpacity={1} />
                     <stop offset="100%" stopColor="#73b815" stopOpacity={0.65} />
-                  </linearGradient>
-                  <linearGradient id="gReanalCanc" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity={0.8} />
-                    <stop offset="100%" stopColor="#ef4444" stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" vertical={false} />
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<BrandTooltip />} />
-                <Bar dataKey="total"      fill="url(#gReanalTotal)" radius={[5, 5, 0, 0]} name="Total" />
-                <Bar dataKey="concluidos" fill="url(#gReanalConc)"  radius={[5, 5, 0, 0]} name="Concluídos" />
-                <Bar dataKey="cancelados" fill="url(#gReanalCanc)"  radius={[5, 5, 0, 0]} name="Cancelados" />
+                <Bar dataKey="total"      fill="url(#gAlterTotal)" radius={[5, 5, 0, 0]} name="Total" />
+                <Bar dataKey="concluidos" fill="url(#gAlterConc)"  radius={[5, 5, 0, 0]} name="Concluídos" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -450,9 +434,9 @@ export default function ReanalisePage() {
                   </button>
                 )}
               </div>
-              <select value={filtroGerente} onChange={(e) => setFiltroGerente(e.target.value)}
+              <select value={filtroTipo} onChange={(e) => setFiltroTipo(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
-                {gerentesUnicos.map((g) => <option key={g} value={g}>{g === "Todos" ? "Gerentes" : g}</option>)}
+                {tiposUnicos.map((t) => <option key={t} value={t}>{t === "Todos" ? "Tipo de Alteração" : t}</option>)}
               </select>
               <select value={filtroFase} onChange={(e) => setFiltroFase(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
@@ -469,8 +453,9 @@ export default function ReanalisePage() {
               <thead>
                 <tr className="border-b border-cf-surface">
                   <th className="px-6 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
-                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Gerente</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Tipo de Alteração</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Fase</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Alerta</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
                   <th className="px-4 py-3 text-right font-semibold text-cf-text3 uppercase tracking-wide">Dias na Fase</th>
                 </tr>
@@ -482,13 +467,14 @@ export default function ReanalisePage() {
                     onClick={() => setCardSelecionado(c)}
                     className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors cursor-pointer"
                   >
-                    <td className="px-6 py-3 font-medium text-cf-text1 max-w-[280px] truncate">{c.razaoSocial}</td>
-                    <td className="px-4 py-3 text-cf-text2">{c.gerente}</td>
+                    <td className="px-6 py-3 font-medium text-cf-text1 max-w-[240px] truncate">{c.razaoSocial}</td>
+                    <td className="px-4 py-3 text-cf-text2">{c.tipoAlteracao || "—"}</td>
                     <td className="px-4 py-3">
                       <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border whitespace-nowrap", faseColor(c.fase))}>
                         {c.fase}
                       </span>
                     </td>
+                    <td className="px-4 py-3 text-cf-text3">{c.dataAlerta || "—"}</td>
                     <td className="px-4 py-3 text-cf-text3">
                       {c.dataEntrada
                         ? new Date(c.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "2-digit" })
@@ -501,7 +487,7 @@ export default function ReanalisePage() {
                 ))}
                 {filtrados.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-10 text-center text-cf-text3">
+                    <td colSpan={6} className="px-6 py-10 text-center text-cf-text3">
                       Nenhum card encontrado com esses filtros.
                     </td>
                   </tr>
