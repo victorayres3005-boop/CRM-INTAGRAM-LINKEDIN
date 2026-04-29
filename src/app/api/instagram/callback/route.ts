@@ -4,7 +4,7 @@ import {
   getLongLivedToken,
   getUserProfile,
 } from "@/lib/instagram/api";
-import { createServerClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       await getLongLivedToken(shortToken);
     const profile = await getUserProfile(longToken);
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
 
     // Upsert conta do Instagram
     const { data: account } = await supabase

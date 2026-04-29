@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { syncInstagramAccount } from "@/lib/instagram/sync";
 import { refreshLongLivedToken } from "@/lib/instagram/api";
 
 export async function POST() {
-  const supabase = createServerClient();
+  const supabase = await createClient();
 
   const { data: tokens, error } = await supabase
     .from("instagram_tokens")

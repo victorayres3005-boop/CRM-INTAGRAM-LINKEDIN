@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { InstagramTokenForm } from "@/components/dashboard/InstagramTokenForm";
 import { Instagram, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
@@ -9,7 +9,7 @@ export default async function ConfiguracoesPage({
 }: {
   searchParams: Promise<{ success?: string; error?: string }>;
 }) {
-  const supabase = createServerClient();
+  const supabase = await createClient();
   const params = await searchParams;
 
   const { data: tokenData } = await supabase

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUserProfile, getLongLivedToken } from "@/lib/instagram/api";
-import { createServerClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
   const { token } = await req.json();
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     // Valida o token buscando o perfil
     const profile = await getUserProfile(finalToken);
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
 
     // Upsert da conta
     const { data: account, error: accountError } = await supabase
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE() {
-  const supabase = createServerClient();
+  const supabase = await createClient();
   await supabase.from("instagram_tokens").delete().neq("id", "");
   return NextResponse.json({ success: true });
 }

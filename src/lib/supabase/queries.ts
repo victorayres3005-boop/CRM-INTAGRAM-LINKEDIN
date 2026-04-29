@@ -1,6 +1,6 @@
 import { subWeeks, startOfWeek, format, eachWeekOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { createServerClient } from "./server";
+import { createClient } from "./server";
 import type { Post, Campaign, ContentType, LeadStatus, Platform } from "@/lib/types/database";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ function last6WeekStarts(): Date[] {
 // ─── Dashboard Overview ──────────────────────────────────────────────────────
 
 export async function getKpiMetrics() {
-  const db = createServerClient();
+  const db = await createClient();
   const sixWeeksAgo = subWeeks(new Date(), 6).toISOString().split("T")[0];
   const weekAgo = subWeeks(new Date(), 1).toISOString().split("T")[0];
 
@@ -75,7 +75,7 @@ export async function getKpiMetrics() {
 }
 
 export async function getFollowersOverTime() {
-  const db = createServerClient();
+  const db = await createClient();
   const weeks = last6WeekStarts();
   const from = weeks[0].toISOString().split("T")[0];
 
@@ -109,7 +109,7 @@ export async function getFollowersOverTime() {
 }
 
 export async function getEngagementOverTime() {
-  const db = createServerClient();
+  const db = await createClient();
   const weeks = last6WeekStarts();
   const from = weeks[0].toISOString().split("T")[0];
 
@@ -138,7 +138,7 @@ export async function getEngagementOverTime() {
 }
 
 export async function getLeadsOverTime() {
-  const db = createServerClient();
+  const db = await createClient();
   const weeks = last6WeekStarts();
   const from = weeks[0].toISOString();
 
@@ -176,7 +176,7 @@ export async function getPostsWithMetrics(platform?: Platform): Promise<
     campaign_name: string | null;
   })[]
 > {
-  const db = createServerClient();
+  const db = await createClient();
 
   let query = db
     .from("posts")
@@ -224,7 +224,7 @@ export async function getPostsWithMetrics(platform?: Platform): Promise<
 // ─── Conteúdo ────────────────────────────────────────────────────────────────
 
 export async function getContentTypePerformance() {
-  const db = createServerClient();
+  const db = await createClient();
 
   const [{ data: posts }, { data: metrics }, { data: leads }] = await Promise.all([
     db.from("posts").select("id, content_type"),
@@ -281,7 +281,7 @@ export async function getContentTypePerformance() {
 // ─── Leads ───────────────────────────────────────────────────────────────────
 
 export async function getLeads(status?: LeadStatus) {
-  const db = createServerClient();
+  const db = await createClient();
 
   let query = db
     .from("leads")
@@ -295,7 +295,7 @@ export async function getLeads(status?: LeadStatus) {
 }
 
 export async function getLeadKpis() {
-  const db = createServerClient();
+  const db = await createClient();
   const { data } = await db.from("leads").select("status");
   const all = data ?? [];
   const total = all.length;
@@ -312,7 +312,7 @@ export async function getLeadKpis() {
 // ─── Crescimento ─────────────────────────────────────────────────────────────
 
 export async function getGrowthData() {
-  const db = createServerClient();
+  const db = await createClient();
   const weeks = last6WeekStarts();
   const from = weeks[0].toISOString().split("T")[0];
 
@@ -390,7 +390,7 @@ export async function getGrowthData() {
 // ─── Campanhas ───────────────────────────────────────────────────────────────
 
 export async function getCampaignsWithMetrics() {
-  const db = createServerClient();
+  const db = await createClient();
 
   const [{ data: campaigns }, { data: posts }, { data: metrics }, { data: leads }] =
     await Promise.all([

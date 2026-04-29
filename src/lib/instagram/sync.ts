@@ -5,7 +5,7 @@ import {
   getAccountInsights,
   getUserProfile,
 } from "./api";
-import { createServerClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 function mapMediaType(type: string): string {
   switch (type) {
@@ -24,7 +24,7 @@ export async function syncInstagramAccount(
   accountId: string,
   token: string
 ): Promise<{ success: boolean; posts: number; error?: string }> {
-  const supabase = createServerClient();
+  const supabase = await createClient();
 
   // 1. Atualizar perfil da conta
   const profile = await getUserProfile(token);
