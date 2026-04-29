@@ -9,6 +9,7 @@ import {
 import {
   CheckCircle2, XCircle, Clock, TrendingUp,
   RefreshCw, FileSpreadsheet, AlertCircle, Mail, Phone, BadgeCheck, X,
+  Hash, Calendar, Timer, User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Cadastro, GerenteInfo } from "@/app/api/gerentes/route";
@@ -40,6 +41,11 @@ function etapaColor(etapa: string): string {
   if (ETAPAS_APROVADO.has(etapa))  return "bg-violet-50 text-violet-700 border-violet-200";
   if (ETAPAS_NEGATIVAS.has(etapa)) return "bg-red-50 text-red-600 border-red-200";
   return "bg-blue-50 text-blue-700 border-blue-100";
+}
+
+function diasDesde(dateStr: string | null): number {
+  if (!dateStr) return 0;
+  return Math.floor((Date.now() - new Date(dateStr + "T12:00:00").getTime()) / 86_400_000);
 }
 
 const AVATAR_COLORS = [
@@ -144,6 +150,126 @@ function BrandTooltip({ active, payload, label }: any) {
   );
 }
 
+// ── Modal de cadastro ─────────────────────────────────────────────────────────
+
+function CadastroModal({ cadastro, onClose }: { cadastro: Cadastro; onClose: () => void }) {
+  useEffect(() => {
+    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", fn);
+    return () => document.removeEventListener("keydown", fn);
+  }, [onClose]);
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const dias = diasDesde(cadastro.dataEntrada);
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="absolute inset-0 bg-cf-navy/50 backdrop-blur-sm" />
+
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-br from-cf-navy to-cf-navy/80 px-6 py-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-white/50 uppercase tracking-wider mb-1">Cadastro</p>
+              <h2 className="text-base font-bold text-white leading-snug">{cadastro.nomeGrupo}</h2>
+              <div className="mt-2.5">
+                <span className={cn(
+                  "inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium border",
+                  etapaColor(cadastro.etapaFunil)
+                )}>
+                  {cadastro.etapaFunil}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white mt-0.5"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+
+        {/* Dias desde entrada — destaque */}
+        <div className={cn(
+          "mx-6 mt-5 flex items-center gap-3 p-3.5 rounded-xl border",
+          dias > 30 ? "bg-red-50 border-red-200" :
+          dias > 14 ? "bg-amber-50 border-amber-200" :
+                      "bg-cf-bg border-cf-surface"
+        )}>
+          <Timer size={16} className={cn(
+            dias > 30 ? "text-red-500" : dias > 14 ? "text-amber-600" : "text-cf-text3"
+          )} />
+          <div>
+            <p className={cn(
+              "cf-metric text-xl font-bold",
+              dias > 30 ? "text-red-500" : dias > 14 ? "text-amber-600" : "text-cf-text2"
+            )}>
+              {dias} dias
+            </p>
+            <p className="text-[11px] text-cf-text3 mt-0.5">desde a entrada</p>
+          </div>
+          {dias > 30 && (
+            <span className="ml-auto text-[10px] font-semibold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+              Atenção
+            </span>
+          )}
+        </div>
+
+        {/* Detalhes */}
+        <div className="px-6 py-5 space-y-3">
+          {[
+            {
+              icon: User,
+              label: "Gerente",
+              content: (
+                <div className="flex items-center gap-2">
+                  <AvatarGerente nome={cadastro.gerente || "?"} size={22} />
+                  <span className="text-xs font-medium text-cf-text1">{cadastro.gerente || "—"}</span>
+                </div>
+              ),
+            },
+            {
+              icon: Hash,
+              label: "CNPJ",
+              content: <span className="text-xs font-medium text-cf-text1 font-mono">{cadastro.cliente || "Não informado"}</span>,
+            },
+            {
+              icon: Calendar,
+              label: "Data de entrada",
+              content: (
+                <span className="text-xs font-medium text-cf-text1">
+                  {cadastro.dataEntrada
+                    ? new Date(cadastro.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })
+                    : "—"}
+                </span>
+              ),
+            },
+          ].map(({ icon: Icon, label, content }) => (
+            <div key={label} className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-cf-bg border border-cf-surface flex items-center justify-center shrink-0 mt-0.5">
+                <Icon size={13} className="text-cf-navy/60" />
+              </div>
+              <div>
+                <p className="text-[10px] text-cf-text3 uppercase tracking-wide">{label}</p>
+                <div className="mt-0.5">{content}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Card de gerente ───────────────────────────────────────────────────────────
 
 function CardGerente({
@@ -160,7 +286,6 @@ function CardGerente({
       className="cf-card flex flex-col hover:shadow-cf-lg hover:-translate-y-0.5 transition-all duration-200 animate-fade-in overflow-hidden cursor-pointer hover:ring-2 hover:ring-cf-navy/20 active:scale-[0.98]"
       style={{ animationDelay: `${idx * 0.05}s` }}
     >
-      {/* Cabeçalho */}
       <div className="px-5 pt-5 pb-4 flex items-center gap-3 bg-gradient-to-br from-cf-navy/[0.04] to-transparent border-b border-cf-surface">
         <AvatarGerente nome={info.nome} size={48} className="ring-2 ring-white shadow" />
         <div className="min-w-0 flex-1">
@@ -175,7 +300,6 @@ function CardGerente({
         </div>
       </div>
 
-      {/* Métricas resumidas */}
       <div className="px-5 py-4 flex-1">
         <div className="grid grid-cols-3 gap-2 text-center mb-2">
           <div className="bg-cf-bg rounded-lg py-2 px-1">
@@ -207,7 +331,6 @@ function CardGerente({
         </div>
       </div>
 
-      {/* Hint de clique */}
       <div className="px-5 py-2.5 border-t border-cf-surface bg-cf-bg/40 flex items-center justify-center gap-1.5">
         <span className="text-[10px] text-cf-text3">Ver detalhes</span>
         <span className="text-[10px] text-cf-navy/40">→</span>
@@ -219,17 +342,14 @@ function CardGerente({
 // ── Modal de gerente ──────────────────────────────────────────────────────────
 
 function GerenteModal({
-  info,
-  stats,
-  cadastros,
-  onClose,
+  info, stats, cadastros, onClose, onSelectCadastro,
 }: {
   info: GerenteInfo;
   stats: { total: number; ativados: number; liberados: number; negados: number; emAnalise: number; taxa: number };
   cadastros: Cadastro[];
   onClose: () => void;
+  onSelectCadastro: (c: Cadastro) => void;
 }) {
-  // Fecha com Escape
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -238,7 +358,6 @@ function GerenteModal({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // Bloqueia scroll do body
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -256,13 +375,11 @@ function GerenteModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-cf-navy/40 backdrop-blur-sm" />
 
-      {/* Painel */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
 
-        {/* Header do modal */}
+        {/* Header */}
         <div className="bg-gradient-to-br from-cf-navy to-cf-navy/80 px-6 py-5 flex items-center gap-4 shrink-0">
           <AvatarGerente nome={info.nome} size={64} className="ring-2 ring-white/30 shadow-lg" />
           <div className="flex-1 min-w-0">
@@ -279,31 +396,25 @@ function GerenteModal({
                 </span>
               )}
               {info.email && (
-                <a
-                  href={`mailto:${info.email.split(";")[0].trim()}`}
+                <a href={`mailto:${info.email.split(";")[0].trim()}`}
                   className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                  onClick={(e) => e.stopPropagation()}>
                   <Mail size={11} />
                   {info.email.split(";")[0].trim()}
                 </a>
               )}
               {formatPhone(info.telefone) && (
-                <a
-                  href={`tel:${info.telefone}`}
+                <a href={`tel:${info.telefone}`}
                   className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                  onClick={(e) => e.stopPropagation()}>
                   <Phone size={11} />
                   {formatPhone(info.telefone)}
                 </a>
               )}
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
-          >
+          <button onClick={onClose}
+            className="shrink-0 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white">
             <X size={16} />
           </button>
         </div>
@@ -311,11 +422,11 @@ function GerenteModal({
         {/* KPIs */}
         <div className="grid grid-cols-5 divide-x divide-cf-surface border-b border-cf-surface shrink-0">
           {[
-            { label: "Total",      value: stats.total,     color: "text-cf-text1"    },
-            { label: "Ativados",   value: stats.ativados,  color: "text-emerald-600" },
-            { label: "Liberados",  value: stats.liberados, color: "text-cf-green"    },
-            { label: "Negados",    value: stats.negados,   color: "text-red-500"     },
-            { label: "Conversão",  value: `${stats.taxa}%`,color: "text-cf-navy"     },
+            { label: "Total",     value: stats.total,     color: "text-cf-text1"    },
+            { label: "Ativados",  value: stats.ativados,  color: "text-emerald-600" },
+            { label: "Liberados", value: stats.liberados, color: "text-cf-green"    },
+            { label: "Negados",   value: stats.negados,   color: "text-red-500"     },
+            { label: "Conversão", value: `${stats.taxa}%`,color: "text-cf-navy"     },
           ].map(({ label, value, color }) => (
             <div key={label} className="py-3 px-4 text-center bg-cf-bg/30">
               <p className={cn("cf-metric text-xl font-bold", color)}>{value}</p>
@@ -326,8 +437,7 @@ function GerenteModal({
 
         {/* Corpo scrollável */}
         <div className="overflow-y-auto flex-1">
-
-          {/* Mini-gráfico por etapa */}
+          {/* Mini-gráfico */}
           {porEtapa.length > 0 && (
             <div className="px-6 pt-5 pb-4 border-b border-cf-surface">
               <div className="flex items-center gap-2 mb-3">
@@ -352,7 +462,7 @@ function GerenteModal({
             </div>
           )}
 
-          {/* Tabela de cadastros */}
+          {/* Tabela de cadastros — clicável */}
           <div>
             <div className="px-6 py-3.5 border-b border-cf-surface bg-cf-bg/40 flex items-center gap-2">
               <div className="w-1 h-3.5 rounded-full bg-cf-green shrink-0" />
@@ -360,6 +470,7 @@ function GerenteModal({
                 Todos os Cadastros
                 <span className="ml-1.5 font-normal text-cf-text3">({cadastros.length})</span>
               </p>
+              <span className="ml-auto text-[10px] text-cf-text3 italic">Clique para ver detalhes</span>
             </div>
             <table className="w-full text-xs">
               <thead>
@@ -377,13 +488,14 @@ function GerenteModal({
                     return b.dataEntrada.localeCompare(a.dataEntrada);
                   })
                   .map((c) => (
-                    <tr key={c.id} className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors">
+                    <tr
+                      key={c.id}
+                      onClick={() => onSelectCadastro(c)}
+                      className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors cursor-pointer"
+                    >
                       <td className="px-6 py-2.5 font-medium text-cf-text1 max-w-[240px] truncate">{c.nomeGrupo}</td>
                       <td className="px-4 py-2.5">
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-full font-medium text-[11px] border",
-                          etapaColor(c.etapaFunil)
-                        )}>
+                        <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border", etapaColor(c.etapaFunil))}>
                           {c.etapaFunil}
                         </span>
                       </td>
@@ -431,6 +543,7 @@ export default function GerentesPage() {
   const [filtroMes, setFiltroMes] = useState("Todos");
 
   const [modalGerente, setModalGerente] = useState<string | null>(null);
+  const [cadastroSelecionado, setCadastroSelecionado] = useState<Cadastro | null>(null);
 
   async function carregar(isAuto = false) {
     if (isAuto) setRefreshing(true);
@@ -493,7 +606,6 @@ export default function GerentesPage() {
   const liberados = filtrados.filter((c) => ETAPAS_LIBERADO.has(c.etapaFunil)).length;
   const negados   = filtrados.filter((c) => ETAPAS_NEGATIVAS.has(c.etapaFunil)).length;
   const emAnalise = total - ativados - liberados - negados;
-  const taxaLib   = total > 0 ? Math.round(((ativados + liberados) / total) * 100) : 0;
 
   const statsPorGerente = cadastros.reduce((m, c) => {
     if (!c.gerente) return m;
@@ -533,7 +645,6 @@ export default function GerentesPage() {
       };
     });
 
-  // Dados do modal
   const gerenteModalInfo = gerentes.find((g) => g.nome === modalGerente) ?? null;
   const cadastrosModal   = cadastros.filter((c) => c.gerente === modalGerente);
   const statsModal       = (() => {
@@ -564,13 +675,22 @@ export default function GerentesPage() {
 
   return (
     <>
-      {/* Modal */}
+      {/* Modal de gerente */}
       {modalGerente && gerenteModalInfo && (
         <GerenteModal
           info={gerenteModalInfo}
           stats={statsModal}
           cadastros={cadastrosModal}
           onClose={() => setModalGerente(null)}
+          onSelectCadastro={(c) => setCadastroSelecionado(c)}
+        />
+      )}
+
+      {/* Modal de cadastro — z-60, aparece por cima */}
+      {cadastroSelecionado && (
+        <CadastroModal
+          cadastro={cadastroSelecionado}
+          onClose={() => setCadastroSelecionado(null)}
         />
       )}
 
@@ -732,7 +852,7 @@ export default function GerentesPage() {
           </div>
         </div>
 
-        {/* Tabela de cadastros */}
+        {/* Tabela de cadastros — clicável */}
         <div className="cf-card">
           <div className="px-6 py-4 border-b border-cf-surface bg-cf-bg/40 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-2">
@@ -743,25 +863,16 @@ export default function GerentesPage() {
               </h3>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <select
-                value={filtroGerente}
-                onChange={(e) => setFiltroGerente(e.target.value)}
-                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-              >
+              <select value={filtroGerente} onChange={(e) => setFiltroGerente(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {gerentesUnicos.map((g) => <option key={g}>{g}</option>)}
               </select>
-              <select
-                value={filtroEtapa}
-                onChange={(e) => setFiltroEtapa(e.target.value)}
-                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-              >
+              <select value={filtroEtapa} onChange={(e) => setFiltroEtapa(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {etapasUnicas.map((e) => <option key={e}>{e}</option>)}
               </select>
-              <select
-                value={filtroMes}
-                onChange={(e) => setFiltroMes(e.target.value)}
-                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy"
-              >
+              <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {mesesUnicos.map((m) => <option key={m} value={m}>{m === "Todos" ? "Todos os meses" : mesLabel(m)}</option>)}
               </select>
             </div>
@@ -778,15 +889,21 @@ export default function GerentesPage() {
               </thead>
               <tbody>
                 {filtrados.map((c) => (
-                  <tr key={c.id} className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors">
+                  <tr
+                    key={c.id}
+                    onClick={() => setCadastroSelecionado(c)}
+                    className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors cursor-pointer"
+                  >
                     <td className="px-6 py-3 font-medium text-cf-text1 max-w-[280px] truncate">{c.nomeGrupo}</td>
                     <td className="px-4 py-3">
                       <div
-                        className="flex items-center gap-2 cursor-pointer group"
-                        onClick={() => setModalGerente(c.gerente)}
+                        className="flex items-center gap-2 group"
+                        onClick={(e) => { e.stopPropagation(); setModalGerente(c.gerente); }}
                       >
                         <AvatarGerente nome={c.gerente || "?"} size={26} />
-                        <span className="text-cf-text2 group-hover:text-cf-navy group-hover:underline transition-colors">{c.gerente}</span>
+                        <span className="text-cf-text2 group-hover:text-cf-navy group-hover:underline transition-colors">
+                          {c.gerente}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-cf-text3">
@@ -795,10 +912,7 @@ export default function GerentesPage() {
                         : "—"}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn(
-                        "px-2 py-0.5 rounded-full font-medium text-[11px] border",
-                        etapaColor(c.etapaFunil)
-                      )}>
+                      <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border", etapaColor(c.etapaFunil))}>
                         {c.etapaFunil}
                       </span>
                     </td>
