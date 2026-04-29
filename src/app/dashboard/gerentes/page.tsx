@@ -865,11 +865,11 @@ export default function GerentesPage() {
             <div className="flex gap-2 flex-wrap">
               <select value={filtroGerente} onChange={(e) => setFiltroGerente(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
-                {gerentesUnicos.map((g) => <option key={g}>{g}</option>)}
+                {gerentesUnicos.map((g) => <option key={g} value={g}>{g === "Todos" ? "Gerentes" : g}</option>)}
               </select>
               <select value={filtroEtapa} onChange={(e) => setFiltroEtapa(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
-                {etapasUnicas.map((e) => <option key={e}>{e}</option>)}
+                {etapasUnicas.map((e) => <option key={e} value={e}>{e === "Todos" ? "Status" : e}</option>)}
               </select>
               <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
