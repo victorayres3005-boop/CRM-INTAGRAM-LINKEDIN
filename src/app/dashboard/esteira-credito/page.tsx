@@ -460,13 +460,13 @@ export default function EsteiraCreditoPage() {
                   </button>
                 )}
               </div>
-              <select value={filtroFase} onChange={(e) => setFiltroFase(e.target.value)}
-                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
-                {fasesUnicas.map((f) => <option key={f} value={f}>{f === "Todos" ? "Status" : f}</option>)}
-              </select>
               <select value={filtroGerente} onChange={(e) => setFiltroGerente(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {gerentesUnicos.map((g) => <option key={g} value={g}>{g === "Todos" ? "Gerentes" : g}</option>)}
+              </select>
+              <select value={filtroFase} onChange={(e) => setFiltroFase(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
+                {fasesUnicas.map((f) => <option key={f} value={f}>{f === "Todos" ? "Status" : f}</option>)}
               </select>
               <select value={filtroMes} onChange={(e) => setFiltroMes(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
