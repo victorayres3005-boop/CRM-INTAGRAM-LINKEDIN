@@ -20,7 +20,7 @@ const ETAPAS_ATIVADO   = new Set(["Ativado"]);
 const ETAPAS_LIBERADO  = new Set(["Liberado"]);
 const ETAPAS_APROVADO  = new Set(["Aprovado"]);
 const ETAPAS_NEGATIVAS = new Set(["Negado", "Negado (pré)", "Cancelado"]);
-const ETAPAS_POSITIVAS = new Set(["Ativado", "Liberado"]);
+const ETAPAS_POSITIVAS = new Set(["Ativado", "Liberado", "Aprovado"]);
 
 function getMes(data: string | null) {
   return data ? data.slice(0, 7) : null;
@@ -81,20 +81,24 @@ function formatPhone(raw: string): string {
 }
 
 const APELIDO_FOTO: Record<string, string> = {
-  "gleyson":     "Gleyson Azevedo",
-  "celio":       "Célio",
-  "célio":       "Célio",
-  "caio":        "Caio",
-  "dalva":       "Dalva",
-  "hernani":     "Hernani",
-  "keyla":       "Keyla",
-  "luiz carlos": "Luiz Carlos",
-  "magno":       "Magno",
-  "rogério":     "Rogério",
-  "rogerio":     "Rogério",
-  "nex":         "Nex",
-  "antecipa":    "Antecipa",
-  "guilherme":   "Guilherme (Nexus)",
+  "gleyson":         "Gleyson Azevedo",
+  "celio":           "Célio",
+  "célio":           "Célio",
+  "caio":            "Caio",
+  "dalva":           "Dalva",
+  "hernani":         "Hernani",
+  "keyla":           "Keyla",
+  "luiz carlos":     "Luiz Carlos",
+  "magno":           "Magno",
+  "rogério":         "Rogério",
+  "rogerio":         "Rogério",
+  "nex":             "Nex",
+  "antecipa":        "Antecipa",
+  "guilherme":       "Guilherme (Nexus)",
+  "cecilia":         "Cecilia Guedes",
+  "cecília":         "Cecilia Guedes",
+  "cecilia guedes":  "Cecilia Guedes",
+  "cecília guedes":  "Cecilia Guedes",
 };
 
 function fotoNome(nome: string): string {
@@ -276,7 +280,7 @@ function CardGerente({
   info, stats, idx, onClick,
 }: {
   info: GerenteInfo;
-  stats: { total: number; ativados: number; liberados: number; negados: number; emAnalise: number; taxa: number };
+  stats: { total: number; ativados: number; liberados: number; aprovados: number; negados: number; emAnalise: number; taxa: number };
   idx: number;
   onClick: () => void;
 }) {
@@ -315,18 +319,22 @@ function CardGerente({
             <p className="text-[10px] text-cf-text3 mt-0.5">Conv.</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-1.5 text-center">
+        <div className="grid grid-cols-4 gap-1.5 text-center">
+          <div className="bg-amber-50 border border-amber-100 rounded-lg py-1.5 px-1">
+            <p className="cf-metric text-sm text-amber-600">{stats.emAnalise}</p>
+            <p className="text-[10px] text-amber-500 mt-0.5">Em Anál.</p>
+          </div>
+          <div className="bg-violet-50 border border-violet-100 rounded-lg py-1.5 px-1">
+            <p className="cf-metric text-sm text-violet-600">{stats.aprovados}</p>
+            <p className="text-[10px] text-violet-500 mt-0.5">Aprov.</p>
+          </div>
           <div className="bg-cf-green-pale border border-cf-green/20 rounded-lg py-1.5 px-1">
             <p className="cf-metric text-sm text-cf-green">{stats.liberados}</p>
             <p className="text-[10px] text-cf-text3 mt-0.5">Liberados</p>
           </div>
           <div className="bg-red-50 border border-red-100 rounded-lg py-1.5 px-1">
             <p className="cf-metric text-sm text-red-500">{stats.negados}</p>
-            <p className="text-[10px] text-red-400 mt-0.5">Negados</p>
-          </div>
-          <div className="bg-amber-50 border border-amber-100 rounded-lg py-1.5 px-1">
-            <p className="cf-metric text-sm text-amber-600">{stats.emAnalise}</p>
-            <p className="text-[10px] text-amber-500 mt-0.5">Em Análise</p>
+            <p className="text-[10px] text-red-400 mt-0.5">Cancel.</p>
           </div>
         </div>
       </div>
@@ -345,7 +353,7 @@ function GerenteModal({
   info, stats, cadastros, onClose, onSelectCadastro,
 }: {
   info: GerenteInfo;
-  stats: { total: number; ativados: number; liberados: number; negados: number; emAnalise: number; taxa: number };
+  stats: { total: number; ativados: number; liberados: number; aprovados: number; negados: number; emAnalise: number; taxa: number };
   cadastros: Cadastro[];
   onClose: () => void;
   onSelectCadastro: (c: Cadastro) => void;
@@ -420,13 +428,15 @@ function GerenteModal({
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-5 divide-x divide-cf-surface border-b border-cf-surface shrink-0">
+        <div className="grid grid-cols-7 divide-x divide-cf-surface border-b border-cf-surface shrink-0">
           {[
-            { label: "Total",     value: stats.total,     color: "text-cf-text1"    },
-            { label: "Ativados",  value: stats.ativados,  color: "text-emerald-600" },
-            { label: "Liberados", value: stats.liberados, color: "text-cf-green"    },
-            { label: "Negados",   value: stats.negados,   color: "text-red-500"     },
-            { label: "Conversão", value: `${stats.taxa}%`,color: "text-cf-navy"     },
+            { label: "Total",      value: stats.total,      color: "text-cf-text1"    },
+            { label: "Em Análise", value: stats.emAnalise,  color: "text-amber-600"   },
+            { label: "Aprovados",  value: stats.aprovados,  color: "text-violet-600"  },
+            { label: "Liberados",  value: stats.liberados,  color: "text-cf-green"    },
+            { label: "Ativados",   value: stats.ativados,   color: "text-emerald-600" },
+            { label: "Cancelados", value: stats.negados,    color: "text-red-500"     },
+            { label: "Conversão",  value: `${stats.taxa}%`, color: "text-cf-navy"     },
           ].map(({ label, value, color }) => (
             <div key={label} className="py-3 px-4 text-center bg-cf-bg/30">
               <p className={cn("cf-metric text-xl font-bold", color)}>{value}</p>
@@ -604,20 +614,22 @@ export default function GerentesPage() {
   const total     = filtrados.length;
   const ativados  = filtrados.filter((c) => ETAPAS_ATIVADO.has(c.etapaFunil)).length;
   const liberados = filtrados.filter((c) => ETAPAS_LIBERADO.has(c.etapaFunil)).length;
+  const aprovados = filtrados.filter((c) => ETAPAS_APROVADO.has(c.etapaFunil)).length;
   const negados   = filtrados.filter((c) => ETAPAS_NEGATIVAS.has(c.etapaFunil)).length;
-  const emAnalise = total - ativados - liberados - negados;
+  const emAnalise = total - ativados - liberados - aprovados - negados;
 
   const statsPorGerente = cadastros.reduce((m, c) => {
     if (!c.gerente) return m;
-    const cur = m.get(c.gerente) ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
+    const cur = m.get(c.gerente) ?? { total: 0, ativados: 0, liberados: 0, aprovados: 0, negados: 0, emAnalise: 0 };
     cur.total++;
     if (ETAPAS_ATIVADO.has(c.etapaFunil))        cur.ativados++;
     else if (ETAPAS_LIBERADO.has(c.etapaFunil))  cur.liberados++;
+    else if (ETAPAS_APROVADO.has(c.etapaFunil))  cur.aprovados++;
     else if (ETAPAS_NEGATIVAS.has(c.etapaFunil)) cur.negados++;
     else cur.emAnalise++;
     m.set(c.gerente, cur);
     return m;
-  }, new Map<string, { total: number; ativados: number; liberados: number; negados: number; emAnalise: number }>());
+  }, new Map<string, { total: number; ativados: number; liberados: number; aprovados: number; negados: number; emAnalise: number }>());
 
   const porGerente = Array.from(
     filtrados.reduce((m, c) => {
@@ -648,8 +660,8 @@ export default function GerentesPage() {
   const gerenteModalInfo = gerentes.find((g) => g.nome === modalGerente) ?? null;
   const cadastrosModal   = cadastros.filter((c) => c.gerente === modalGerente);
   const statsModal       = (() => {
-    const s = statsPorGerente.get(modalGerente ?? "") ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
-    return { ...s, taxa: s.total > 0 ? Math.round(((s.ativados + s.liberados) / s.total) * 100) : 0 };
+    const s = statsPorGerente.get(modalGerente ?? "") ?? { total: 0, ativados: 0, liberados: 0, aprovados: 0, negados: 0, emAnalise: 0 };
+    return { ...s, taxa: s.total > 0 ? Math.round(((s.ativados + s.liberados + s.aprovados) / s.total) * 100) : 0 };
   })();
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -731,18 +743,20 @@ export default function GerentesPage() {
         </div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {[
             { label: "Total Cadastros", value: total,     icon: FileSpreadsheet, color: "navy"    as const },
-            { label: "Ativados",        value: ativados,  icon: BadgeCheck,      color: "teal"    as const },
-            { label: "Liberados",       value: liberados, icon: CheckCircle2,    color: "green"   as const },
             { label: "Em Análise",      value: emAnalise, icon: Clock,           color: "warning" as const },
-            { label: "Negados",         value: negados,   icon: XCircle,         color: "danger"  as const },
+            { label: "Aprovados",       value: aprovados, icon: CheckCircle2,    color: "violet"  as const },
+            { label: "Liberados",       value: liberados, icon: CheckCircle2,    color: "green"   as const },
+            { label: "Ativados",        value: ativados,  icon: BadgeCheck,      color: "teal"    as const },
+            { label: "Cancelados",      value: negados,   icon: XCircle,         color: "danger"  as const },
           ].map(({ label, value, icon: Icon, color }, idx) => {
             const colors = {
               navy:    { top: "border-t-cf-navy",     from: "from-cf-navy/[0.04]",  bg: "bg-cf-navy/10",     ic: "text-cf-navy"    },
               teal:    { top: "border-t-emerald-500", from: "from-emerald-50",      bg: "bg-emerald-100",    ic: "text-emerald-600"},
               green:   { top: "border-t-cf-green",    from: "from-cf-green-pale",   bg: "bg-cf-green-pale",  ic: "text-cf-green"   },
+              violet:  { top: "border-t-violet-500",  from: "from-violet-50",       bg: "bg-violet-100",     ic: "text-violet-600" },
               warning: { top: "border-t-amber-400",   from: "from-amber-50",        bg: "bg-amber-50",       ic: "text-amber-600"  },
               danger:  { top: "border-t-red-400",     from: "from-red-50",          bg: "bg-red-50",         ic: "text-red-600"    },
             };
@@ -779,8 +793,8 @@ export default function GerentesPage() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
               {gerentes.map((g, i) => {
-                const s = statsPorGerente.get(g.nome) ?? { total: 0, ativados: 0, liberados: 0, negados: 0, emAnalise: 0 };
-                const taxa = s.total > 0 ? Math.round(((s.ativados + s.liberados) / s.total) * 100) : 0;
+                const s = statsPorGerente.get(g.nome) ?? { total: 0, ativados: 0, liberados: 0, aprovados: 0, negados: 0, emAnalise: 0 };
+                const taxa = s.total > 0 ? Math.round(((s.ativados + s.liberados + s.aprovados) / s.total) * 100) : 0;
                 return (
                   <CardGerente
                     key={g.nome}

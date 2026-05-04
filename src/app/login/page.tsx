@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  Mail, Lock, UserPlus, TrendingUp, Users, BarChart2,
+  Mail, Lock, UserPlus, CreditCard, GitMerge, ClipboardList,
   Shield, ArrowRight, Loader2,
 } from "lucide-react";
 import { Toaster, toast } from "sonner";
@@ -31,19 +31,19 @@ function mapError(msg: string): string {
 
 const features = [
   {
-    icon: TrendingUp,
-    title: "Crescimento rastreado",
-    desc: "Monitore seguidores, alcance e engajamento em tempo real.",
+    icon: CreditCard,
+    title: "Análise de Crédito",
+    desc: "Avalie propostas com estrutura clara, histórico e parecer centralizado.",
   },
   {
-    icon: Users,
-    title: "Gestão de leads",
-    desc: "Capture e gerencie relacionamentos com sua audiência orgânica.",
+    icon: GitMerge,
+    title: "Esteira de Crédito",
+    desc: "Acompanhe cada proposta do cadastro à aprovação em tempo real.",
   },
   {
-    icon: BarChart2,
-    title: "Análise de campanhas",
-    desc: "Métricas detalhadas de posts, stories e desempenho de conteúdo.",
+    icon: ClipboardList,
+    title: "Ficha PF/PJ",
+    desc: "Perfil completo de cada cliente — dados, vínculos e operações.",
   },
 ];
 
@@ -283,17 +283,17 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="relative px-10 pt-10">
             <LogoFull />
-            <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">CRM Orgânico</p>
+            <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">Plataforma de Crédito</p>
           </div>
 
           {/* Hero content */}
           <div className="relative flex-1 flex flex-col justify-center px-10">
             <h1 className="text-[28px] font-semibold text-white leading-snug mb-3">
-              Gerencie seu Instagram<br />
-              <span style={{ color: "#a8d96b" }}>com inteligência</span>
+              Gestão de crédito<br />
+              <span style={{ color: "#a8d96b" }}>centralizada e eficiente</span>
             </h1>
             <p className="text-white/55 text-[14px] leading-relaxed mb-10 max-w-sm">
-              Plataforma completa de CRM orgânico para equipes de marketing da Capital Finanças.
+              Plataforma operacional de crédito para a equipe da Capital Finanças.
             </p>
 
             <ul className="space-y-6">
@@ -325,7 +325,7 @@ export default function LoginPage() {
             style={{ background: "linear-gradient(135deg, #0f1f5c 0%, #203b88 100%)" }}
           >
             <LogoFull />
-            <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">CRM Orgânico</p>
+            <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">Plataforma de Crédito</p>
           </div>
 
           {/* Centered form */}

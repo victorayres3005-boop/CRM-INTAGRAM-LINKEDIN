@@ -34,7 +34,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-white/8">
         <LogoFull />
-        <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">CRM Orgânico</p>
+        <p className="text-[10px] text-white/30 mt-1.5 tracking-widest uppercase">Plataforma de Crédito</p>
       </div>
 
       {/* Nav */}
