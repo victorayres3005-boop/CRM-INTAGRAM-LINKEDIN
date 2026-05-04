@@ -272,9 +272,22 @@ export async function GET() {
       });
     }
 
-    const gerentes = Array.from(equipe.values()).sort((a, b) =>
-      a.nome.localeCompare(b.nome, "pt-BR")
-    );
+    // Card "Sem Gerente" sempre presente na equipe — captura cards que sobem
+    // no Goalfy sem responsável e sem tag de gerente.
+    equipe.set("Sem Gerente", {
+      nome:          "Sem Gerente",
+      exclusividade: "Pendente atribuição",
+      supervisor:    "",
+      telefone:      "",
+      email:         "",
+    });
+
+    // Mantém "Sem Gerente" sempre no fim da lista, demais ordenados A→Z.
+    const gerentes = Array.from(equipe.values()).sort((a, b) => {
+      if (a.nome === "Sem Gerente") return 1;
+      if (b.nome === "Sem Gerente") return -1;
+      return a.nome.localeCompare(b.nome, "pt-BR");
+    });
 
     return NextResponse.json({
       cadastros,
