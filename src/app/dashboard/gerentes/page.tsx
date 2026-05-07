@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -171,12 +172,14 @@ function CadastroModal({ cadastro, onClose }: { cadastro: Cadastro; onClose: () 
 
   const dias = diasDesde(cadastro.dataEntrada);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="absolute inset-0 bg-cf-navy/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-950/65 backdrop-blur-[2px]" />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md animate-fade-in overflow-hidden">
         {/* Header */}
@@ -271,7 +274,8 @@ function CadastroModal({ cadastro, onClose }: { cadastro: Cadastro; onClose: () 
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -379,12 +383,14 @@ function GerenteModal({
     }, new Map<string, number>())
   ).map(([etapa, count]) => ({ etapa, count })).sort((a, b) => b.count - a.count);
 
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="absolute inset-0 bg-cf-navy/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-950/45 backdrop-blur-[2px]" />
 
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
 
@@ -529,7 +535,8 @@ function GerenteModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
