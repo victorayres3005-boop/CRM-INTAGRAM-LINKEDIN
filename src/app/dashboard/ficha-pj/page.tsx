@@ -11,6 +11,7 @@ import {
   Search, X, User, Calendar, Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import type { FichaPJ } from "@/app/api/ficha-pj/route";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -293,11 +294,7 @@ export default function FichaPJPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw size={24} className="animate-spin text-cf-navy opacity-40" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

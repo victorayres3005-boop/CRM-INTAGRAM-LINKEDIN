@@ -11,6 +11,7 @@ import {
   FileText, Calendar, Timer, Tag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import type { CardAlteracao } from "@/app/api/alteracao-contratual/route";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -268,11 +269,7 @@ export default function AlteracaoContratualPage() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw size={24} className="animate-spin text-cf-navy opacity-40" />
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   if (error) {

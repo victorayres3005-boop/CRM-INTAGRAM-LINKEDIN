@@ -33,6 +33,12 @@ body {
 /* ── Cards ─────────────────────────────────────── */
 .cf-card {
   @apply bg-white rounded-lg border border-[#e4e8f0];
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.cf-card-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.07);
 }
 
 /* ── Metric numbers ─────────────────────────────── */
@@ -45,12 +51,14 @@ body {
 /* ── Buttons ────────────────────────────────────── */
 .btn-primary {
   @apply bg-cf-navy text-white text-sm font-medium px-3.5 py-2 rounded-md
-         hover:bg-cf-navy-dark transition-colors;
+         hover:bg-cf-navy-dark transition-all duration-150
+         active:scale-[0.97];
 }
 
 .btn-ghost {
   @apply text-cf-text3 text-sm font-medium px-3.5 py-2 rounded-md border border-[#e4e8f0]
-         hover:bg-[#f7f8fc] hover:text-cf-text2 transition-colors;
+         hover:bg-[#f7f8fc] hover:text-cf-text2 transition-all duration-150
+         active:scale-[0.97];
 }
 
 /* ── Section headers ─────────────────────────────── */
@@ -58,17 +66,89 @@ body {
   @apply text-[11px] font-semibold text-cf-text3 uppercase tracking-widest;
 }
 
-/* ── Animations ─────────────────────────────────── */
-@keyframes fadeUp {
+/* ── Keyframes ──────────────────────────────────── */
+@keyframes cf-fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in { animation: fadeUp 0.25s ease-out both; }
+@keyframes cf-fade-in-pure {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes cf-slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cf-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes cf-number-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.94); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes cf-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Animation utilities ────────────────────────── */
+.animate-fade-in       { animation: cf-fade-in 200ms ease-out both; }
+.animate-fade-in-pure  { animation: cf-fade-in-pure 220ms ease-out both; }
+.animate-slide-up      { animation: cf-slide-up 350ms ease-out both; }
+.animate-scale-in      { animation: cf-scale-in 300ms ease-out both; }
+.animate-number-in     { animation: cf-number-in 500ms ease-out both; }
+
+.animate-stagger-1 { animation: cf-fade-in 400ms ease-out both;  animation-delay:  50ms; }
+.animate-stagger-2 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 100ms; }
+.animate-stagger-3 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 150ms; }
+.animate-stagger-4 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 200ms; }
+.animate-stagger-5 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 250ms; }
+.animate-stagger-6 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 300ms; }
+.animate-stagger-7 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 350ms; }
+.animate-stagger-8 { animation: cf-fade-in 400ms ease-out both;  animation-delay: 400ms; }
+
+/* Filhos diretos entram em sequência sem precisar marcar cada um */
+.fade-stagger > * { animation: cf-fade-in 350ms ease-out both; }
+.fade-stagger > *:nth-child(1) { animation-delay:    0ms; }
+.fade-stagger > *:nth-child(2) { animation-delay:   50ms; }
+.fade-stagger > *:nth-child(3) { animation-delay:  100ms; }
+.fade-stagger > *:nth-child(4) { animation-delay:  150ms; }
+.fade-stagger > *:nth-child(5) { animation-delay:  200ms; }
+.fade-stagger > *:nth-child(6) { animation-delay:  240ms; }
+.fade-stagger > *:nth-child(7) { animation-delay:  280ms; }
+.fade-stagger > *:nth-child(8) { animation-delay:  320ms; }
+
+/* Shimmer pra skeletons ricos */
+.cf-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(237, 240, 247, 0.6) 0%,
+    rgba(237, 240, 247, 1) 50%,
+    rgba(237, 240, 247, 0.6) 100%
+  );
+  background-size: 200% 100%;
+  animation: cf-shimmer 1.5s linear infinite;
+}
+
+/* ── Reduced motion ─────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
 
 /* ── Input fields ───────────────────────────────── */
 .input-field {
   @apply w-full rounded-md border border-[#e4e8f0] bg-white pl-9 pr-3 py-2 text-[13px]
          text-cf-text1 placeholder:text-cf-text3/60 outline-none
-         focus:border-cf-navy focus:ring-2 focus:ring-cf-navy/10 transition-all;
+         focus:border-cf-navy focus:ring-2 focus:ring-cf-navy/10 transition-all duration-150;
 }
