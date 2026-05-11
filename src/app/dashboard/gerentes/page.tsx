@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
 import {
@@ -150,6 +150,33 @@ function BrandTooltip({ active, payload, label }: any) {
         <div key={p.dataKey} className="flex items-center gap-2 mt-1">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color ?? p.fill }} />
           <span className="text-xs font-semibold cf-metric text-cf-text1">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const LEGEND_COLORS: Record<string, string> = {
+  total: "#203b88",
+  ativados: "#73b815",
+  liberados: "#73b815",
+  aprovados: "#73b815",
+  concluidos: "#73b815",
+  negados: "#ef4444",
+  cancelados: "#ef4444",
+};
+
+function BrandLegend({ payload }: any) {
+  if (!payload?.length) return null;
+  return (
+    <div className="flex items-center justify-center gap-5 mt-2">
+      {payload.map((entry: any) => (
+        <div key={entry.dataKey} className="flex items-center gap-1.5">
+          <span
+            className="w-2.5 h-2.5 rounded-sm shrink-0"
+            style={{ background: LEGEND_COLORS[entry.dataKey] ?? entry.color }}
+          />
+          <span className="text-xs font-medium text-cf-text2">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -848,7 +875,8 @@ export default function GerentesPage() {
                 <XAxis type="number" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <YAxis dataKey="gerente" type="category" tick={{ fontSize: 11, fill: "#374151" }} width={110} axisLine={false} tickLine={false} />
                 <Tooltip content={<BrandTooltip />} />
-                <Bar dataKey="total"    fill="url(#gNavy)"  radius={[0, 4, 4, 0]} name="Total" />
+                <Legend content={<BrandLegend />} verticalAlign="bottom" />
+                <Bar dataKey="total"    fill="url(#gNavy)"  radius={[0, 4, 4, 0]} name="Total de cadastros" />
                 <Bar dataKey="ativados" fill="url(#gGreen)" radius={[0, 4, 4, 0]} name="Ativados" />
               </BarChart>
             </ResponsiveContainer>
@@ -875,7 +903,8 @@ export default function GerentesPage() {
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <Tooltip content={<BrandTooltip />} />
-                <Bar dataKey="total"    fill="url(#gTotalMes)" radius={[5, 5, 0, 0]} name="Total" />
+                <Legend content={<BrandLegend />} verticalAlign="bottom" />
+                <Bar dataKey="total"    fill="url(#gTotalMes)" radius={[5, 5, 0, 0]} name="Total de cadastros" />
                 <Bar dataKey="ativados" fill="url(#gAtivMes)"  radius={[5, 5, 0, 0]} name="Ativados" />
               </BarChart>
             </ResponsiveContainer>

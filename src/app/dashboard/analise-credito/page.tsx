@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell,
 } from "recharts";
 import {
@@ -87,6 +87,33 @@ function BrandTooltip({ active, payload, label }: any) {
         <div key={p.dataKey} className="flex items-center gap-2 mt-1">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color ?? p.fill }} />
           <span className="text-xs font-semibold cf-metric text-cf-text1">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const LEGEND_COLORS: Record<string, string> = {
+  total: "#203b88",
+  ativados: "#73b815",
+  liberados: "#73b815",
+  aprovados: "#73b815",
+  concluidos: "#73b815",
+  negados: "#ef4444",
+  cancelados: "#ef4444",
+};
+
+function BrandLegend({ payload }: any) {
+  if (!payload?.length) return null;
+  return (
+    <div className="flex items-center justify-center gap-5 mt-2">
+      {payload.map((entry: any) => (
+        <div key={entry.dataKey} className="flex items-center gap-1.5">
+          <span
+            className="w-2.5 h-2.5 rounded-sm shrink-0"
+            style={{ background: LEGEND_COLORS[entry.dataKey] ?? entry.color }}
+          />
+          <span className="text-xs font-medium text-cf-text2">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -439,10 +466,11 @@ export default function AnaliseCreditoPage() {
                     <stop offset="100%" stopColor="#ef4444" stopOpacity={0.4} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDashboard="3 3" stroke="#edf2fb" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#edf2fb" vertical={false} />
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<BrandTooltip />} />
+                <Legend content={<BrandLegend />} verticalAlign="bottom" />
                 <Bar dataKey="total"    fill="url(#gCreditTotal)" radius={[5, 5, 0, 0]} name="Total" />
                 <Bar dataKey="aprovados"fill="url(#gCreditAprov)" radius={[5, 5, 0, 0]} name="Aprovados" />
                 <Bar dataKey="negados"  fill="url(#gCreditNeg)"   radius={[5, 5, 0, 0]} name="Negados" />

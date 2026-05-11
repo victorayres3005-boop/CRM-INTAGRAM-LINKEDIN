@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer, Cell,
 } from "recharts";
 import {
@@ -89,6 +89,33 @@ function BrandTooltip({ active, payload, label }: any) {
         <div key={p.dataKey} className="flex items-center gap-2 mt-1">
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: p.color ?? p.fill }} />
           <span className="text-xs font-semibold cf-metric text-cf-text1">{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const LEGEND_COLORS: Record<string, string> = {
+  total: "#203b88",
+  ativados: "#73b815",
+  liberados: "#73b815",
+  aprovados: "#73b815",
+  concluidos: "#73b815",
+  negados: "#ef4444",
+  cancelados: "#ef4444",
+};
+
+function BrandLegend({ payload }: any) {
+  if (!payload?.length) return null;
+  return (
+    <div className="flex items-center justify-center gap-5 mt-2">
+      {payload.map((entry: any) => (
+        <div key={entry.dataKey} className="flex items-center gap-1.5">
+          <span
+            className="w-2.5 h-2.5 rounded-sm shrink-0"
+            style={{ background: LEGEND_COLORS[entry.dataKey] ?? entry.color }}
+          />
+          <span className="text-xs font-medium text-cf-text2">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -431,6 +458,7 @@ export default function FichaPJPage() {
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#6b7280" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip content={<BrandTooltip />} />
+                <Legend content={<BrandLegend />} verticalAlign="bottom" />
                 <Bar dataKey="total"    fill="url(#gFichaTotal)" radius={[5, 5, 0, 0]} name="Total" />
                 <Bar dataKey="liberados"fill="url(#gFichaLib)"   radius={[5, 5, 0, 0]} name="Liberados" />
                 <Bar dataKey="negados"  fill="url(#gFichaNeg)"   radius={[5, 5, 0, 0]} name="Negados" />
