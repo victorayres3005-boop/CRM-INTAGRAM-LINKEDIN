@@ -188,7 +188,12 @@ function CadastroModal({ cadastro, onClose }: { cadastro: Cadastro; onClose: () 
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-white/50 uppercase tracking-wider mb-1">Cadastro</p>
               <h2 className="text-base font-bold text-white leading-snug">{cadastro.nomeGrupo}</h2>
-              <div className="mt-2.5">
+              {cadastro.etapaReal && cadastro.etapaReal !== "—" && (
+                <p className="mt-2 text-[11px] text-white/70">
+                  <span className="text-white/40">Etapa atual:</span> {cadastro.etapaReal}
+                </p>
+              )}
+              <div className="mt-2">
                 <span className={cn(
                   "inline-block px-2.5 py-0.5 rounded-full text-[11px] font-medium border",
                   etapaColor(cadastro.etapaFunil)
@@ -493,7 +498,8 @@ function GerenteModal({
               <thead>
                 <tr className="border-b border-cf-surface">
                   <th className="px-6 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
-                  <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa</th>
+                  <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa Real</th>
+                  <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Status</th>
                   <th className="px-4 py-2.5 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
                 </tr>
               </thead>
@@ -511,6 +517,9 @@ function GerenteModal({
                       className="border-b border-cf-surface/60 hover:bg-cf-bg/60 transition-colors cursor-pointer"
                     >
                       <td className="px-6 py-2.5 font-medium text-cf-text1 max-w-[240px] truncate">{c.nomeGrupo}</td>
+                      <td className="px-4 py-2.5 text-cf-text2 max-w-[180px]">
+                        <span className="block truncate" title={c.etapaReal}>{c.etapaReal}</span>
+                      </td>
                       <td className="px-4 py-2.5">
                         <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border", etapaColor(c.etapaFunil))}>
                           {c.etapaFunil}
@@ -525,7 +534,7 @@ function GerenteModal({
                   ))}
                 {cadastros.length === 0 && (
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-cf-text3">
+                    <td colSpan={4} className="px-6 py-8 text-center text-cf-text3">
                       Nenhum cadastro encontrado para este gerente.
                     </td>
                   </tr>
@@ -558,6 +567,7 @@ export default function GerentesPage() {
 
   const [filtroGerente, setFiltroGerente] = useState("Todos");
   const [filtroEtapa, setFiltroEtapa] = useState("Todos");
+  const [filtroEtapaReal, setFiltroEtapaReal] = useState("Todos");
   const [filtroMes, setFiltroMes] = useState("Todos");
 
   const [modalGerente, setModalGerente] = useState<string | null>(null);
@@ -602,14 +612,16 @@ export default function GerentesPage() {
 
   // ── Dados derivados ────────────────────────────────────────────────────────
 
-  const gerentesUnicos = ["Todos", ...Array.from(new Set(cadastros.map((c) => c.gerente).filter(Boolean))).sort()];
-  const etapasUnicas   = ["Todos", ...Array.from(new Set(cadastros.map((c) => c.etapaFunil).filter(Boolean))).sort()];
-  const mesesUnicos    = ["Todos", ...Array.from(new Set(cadastros.map((c) => getMes(c.dataEntrada)).filter(Boolean) as string[])).sort()];
+  const gerentesUnicos    = ["Todos", ...Array.from(new Set(cadastros.map((c) => c.gerente).filter(Boolean))).sort()];
+  const etapasUnicas      = ["Todos", ...Array.from(new Set(cadastros.map((c) => c.etapaFunil).filter(Boolean))).sort()];
+  const etapasReaisUnicas = ["Todos", ...Array.from(new Set(cadastros.map((c) => c.etapaReal).filter((v): v is string => Boolean(v) && v !== "—"))).sort()];
+  const mesesUnicos       = ["Todos", ...Array.from(new Set(cadastros.map((c) => getMes(c.dataEntrada)).filter(Boolean) as string[])).sort()];
 
   const filtrados = cadastros
     .filter((c) => {
       if (filtroGerente !== "Todos" && c.gerente !== filtroGerente) return false;
       if (filtroEtapa !== "Todos" && c.etapaFunil !== filtroEtapa) return false;
+      if (filtroEtapaReal !== "Todos" && c.etapaReal !== filtroEtapaReal) return false;
       if (filtroMes !== "Todos" && getMes(c.dataEntrada) !== filtroMes) return false;
       return true;
     })
@@ -885,6 +897,10 @@ export default function GerentesPage() {
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {gerentesUnicos.map((g) => <option key={g} value={g}>{g === "Todos" ? "Gerentes" : g}</option>)}
               </select>
+              <select value={filtroEtapaReal} onChange={(e) => setFiltroEtapaReal(e.target.value)}
+                className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy max-w-[180px]">
+                {etapasReaisUnicas.map((e) => <option key={e} value={e}>{e === "Todos" ? "Etapa real" : e}</option>)}
+              </select>
               <select value={filtroEtapa} onChange={(e) => setFiltroEtapa(e.target.value)}
                 className="text-xs border border-cf-surface rounded-lg px-3 py-1.5 bg-white text-cf-text2 focus:outline-none focus:border-cf-navy">
                 {etapasUnicas.map((e) => <option key={e} value={e}>{e === "Todos" ? "Status" : e}</option>)}
@@ -902,7 +918,8 @@ export default function GerentesPage() {
                   <th className="px-6 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Empresa</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Gerente</th>
                   <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Entrada</th>
-                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa do Funil</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Etapa Real</th>
+                  <th className="px-4 py-3 text-left font-semibold text-cf-text3 uppercase tracking-wide">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -929,6 +946,9 @@ export default function GerentesPage() {
                         ? new Date(c.dataEntrada + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })
                         : "—"}
                     </td>
+                    <td className="px-4 py-3 text-cf-text2 max-w-[200px]">
+                      <span className="block truncate" title={c.etapaReal}>{c.etapaReal}</span>
+                    </td>
                     <td className="px-4 py-3">
                       <span className={cn("px-2 py-0.5 rounded-full font-medium text-[11px] border", etapaColor(c.etapaFunil))}>
                         {c.etapaFunil}
@@ -938,7 +958,7 @@ export default function GerentesPage() {
                 ))}
                 {filtrados.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="px-6 py-10 text-center text-cf-text3">
+                    <td colSpan={5} className="px-6 py-10 text-center text-cf-text3">
                       Nenhum cadastro encontrado com esses filtros.
                     </td>
                   </tr>

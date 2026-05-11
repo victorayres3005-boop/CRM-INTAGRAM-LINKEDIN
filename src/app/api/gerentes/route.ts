@@ -66,6 +66,7 @@ export interface Cadastro {
   nomeGrupo: string;
   gerente: string;
   dataEntrada: string | null;
+  etapaReal: string;
   etapaFunil: string;
   substatus: string;
 }
@@ -214,6 +215,7 @@ export async function GET() {
           nomeGrupo: c.title,
           gerente: escolha.nome,
           dataEntrada: c.createdAt ? c.createdAt.split("T")[0] : null,
+          etapaReal: c.phaseName?.trim() || "—",
           etapaFunil: normalizeEtapa(c.phaseName),
           substatus: "",
         };
