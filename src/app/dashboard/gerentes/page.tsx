@@ -877,7 +877,7 @@ export default function GerentesPage() {
                 <Tooltip content={<BrandTooltip />} />
                 <Legend content={<BrandLegend />} verticalAlign="bottom" />
                 <Bar dataKey="total"    fill="url(#gNavy)"  radius={[0, 4, 4, 0]} name="Total de cadastros" />
-                <Bar dataKey="ativados" fill="url(#gGreen)" radius={[0, 4, 4, 0]} name="Ativados" />
+                <Bar dataKey="ativados" fill="url(#gGreen)" radius={[0, 4, 4, 0]} name="Liberados" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -905,7 +905,7 @@ export default function GerentesPage() {
                 <Tooltip content={<BrandTooltip />} />
                 <Legend content={<BrandLegend />} verticalAlign="bottom" />
                 <Bar dataKey="total"    fill="url(#gTotalMes)" radius={[5, 5, 0, 0]} name="Total de cadastros" />
-                <Bar dataKey="ativados" fill="url(#gAtivMes)"  radius={[5, 5, 0, 0]} name="Ativados" />
+                <Bar dataKey="ativados" fill="url(#gAtivMes)"  radius={[5, 5, 0, 0]} name="Liberados" />
               </BarChart>
             </ResponsiveContainer>
           </div>
