@@ -460,7 +460,7 @@ export default function FichaPJPage() {
                 <Tooltip content={<BrandTooltip />} />
                 <Legend content={<BrandLegend />} verticalAlign="bottom" />
                 <Bar dataKey="total"    fill="url(#gFichaTotal)" radius={[5, 5, 0, 0]} name="Total" />
-                <Bar dataKey="liberados"fill="url(#gFichaLib)"   radius={[5, 5, 0, 0]} name="Liberados" />
+                <Bar dataKey="liberados"fill="url(#gFichaLib)"   radius={[5, 5, 0, 0]} name="Aprovados" />
                 <Bar dataKey="negados"  fill="url(#gFichaNeg)"   radius={[5, 5, 0, 0]} name="Negados" />
               </BarChart>
             </ResponsiveContainer>
